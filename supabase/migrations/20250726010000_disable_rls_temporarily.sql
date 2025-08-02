@@ -1,0 +1,6 @@
+-- Desactivar RLS temporalmente para permitir inserción de datos de prueba
+ALTER TABLE businesses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE promotions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE clients DISABLE ROW LEVEL SECURITY;
+ALTER TABLE products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE menus_dia DISABLE ROW LEVEL SECURITY; 
