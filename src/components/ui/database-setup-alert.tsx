@@ -91,8 +91,7 @@ CREATE POLICY "Businesses can delete their own promotions"
       </AlertTitle>
       <AlertDescription className="text-orange-700 space-y-4">
         <p>
-          La tabla de promociones no existe en tu base de datos de Supabase. 
-          Para usar las promociones, necesitas crear la tabla manualmente.
+          Configuración de base de datos requerida para usar las promociones.
         </p>
         
         <div className="space-y-2">

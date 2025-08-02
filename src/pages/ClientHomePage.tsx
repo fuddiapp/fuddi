@@ -482,19 +482,7 @@ const ClientHomePage: React.FC = () => {
                 : 'Para ver promociones, necesitas configurar tu ubicación o agregar datos de prueba a la base de datos.'
               }
             </p>
-            {!userLocation?.address && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-yellow-800 mb-2">📋 Para agregar datos de prueba:</h4>
-                <ol className="text-sm text-yellow-700 text-left max-w-md mx-auto space-y-1">
-                  <li>1. Ve al panel de administración de Supabase</li>
-                  <li>2. Navega a la tabla "businesses"</li>
-                  <li>3. Agrega al menos un negocio con datos completos</li>
-                  <li>4. Ve a la tabla "promotions"</li>
-                  <li>5. Agrega promociones asociadas al negocio</li>
-                  <li>6. Refresca esta página</li>
-                </ol>
-              </div>
-            )}
+
             <button
               onClick={() => window.location.reload()}
               className="bg-fuddi-purple text-white px-6 py-2 rounded-lg hover:bg-fuddi-purple-light transition-colors"

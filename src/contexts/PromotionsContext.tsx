@@ -84,7 +84,7 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
         
         if (errorMessage.includes('relation "promotions" does not exist') || 
             errorMessage.includes('table "promotions" does not exist')) {
-          console.error('La tabla de promociones no existe en Supabase');
+          console.error('Error de configuración de base de datos');
           setDatabaseError(true);
         } else if (errorMessage.includes('permission denied') || 
                    errorMessage.includes('access denied')) {

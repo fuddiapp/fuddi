@@ -43,41 +43,61 @@ async function diagnoseSupabase() {
       console.log('✅ Negocios encontrados:', businesses?.length || 0);
       if (businesses && businesses.length > 0) {
         console.log('Primer negocio:', businesses[0]);
+        
+        // 3. Probar consulta de promociones para este negocio específico
+        const businessId = businesses[0].id;
+        console.log('\n📊 Probando consulta de promociones para negocio:', businessId);
+        const { data: businessPromotions, error: businessPromotionsError } = await supabase
+          .from('promotions')
+          .select('id, title, business_id, is_active, created_at')
+          .eq('business_id', businessId);
+        
+        if (businessPromotionsError) {
+          console.error('❌ Error consultando promociones del negocio:', businessPromotionsError);
+        } else {
+          console.log('✅ Promociones del negocio encontradas:', businessPromotions?.length || 0);
+          if (businessPromotions && businessPromotions.length > 0) {
+            console.log('Promociones del negocio:', businessPromotions);
+          }
+        }
       }
     }
     
-    // 3. Probar consulta de promociones
-    console.log('\n📊 Probando consulta de promociones...');
-    const { data: promotions, error: promotionsError } = await supabase
+    // 4. Probar consulta de todas las promociones
+    console.log('\n📊 Probando consulta de todas las promociones...');
+    const { data: allPromotions, error: allPromotionsError } = await supabase
       .from('promotions')
-      .select('id, title, business_id')
-      .limit(5);
+      .select('id, title, business_id, is_active')
+      .limit(10);
     
-    if (promotionsError) {
-      console.error('❌ Error consultando promociones:', promotionsError);
+    if (allPromotionsError) {
+      console.error('❌ Error consultando todas las promociones:', allPromotionsError);
     } else {
-      console.log('✅ Promociones encontradas:', promotions?.length || 0);
-      if (promotions && promotions.length > 0) {
-        console.log('Primera promoción:', promotions[0]);
+      console.log('✅ Total de promociones en la base de datos:', allPromotions?.length || 0);
+      if (allPromotions && allPromotions.length > 0) {
+        console.log('Primeras promociones:', allPromotions);
       }
     }
     
-    // 4. Probar función RPC
-    console.log('\n📊 Probando función RPC get_business_followers_count...');
-    try {
-      const { data: followersResult, error: followersError } = await supabase
-        .rpc('get_business_followers_count', { business_uuid: 'test' });
-      
-      if (followersError) {
-        console.error('❌ Error en función RPC:', followersError);
-      } else {
-        console.log('✅ Función RPC OK, resultado:', followersResult);
+    // 5. Probar función RPC con UUID válido
+    if (businesses && businesses.length > 0) {
+      const businessId = businesses[0].id;
+      console.log('\n📊 Probando función RPC get_business_followers_count con UUID válido...');
+      try {
+        const { data: followersResult, error: followersError } = await supabase
+          .rpc('get_business_followers_count', { business_uuid: businessId });
+        
+        if (followersError) {
+          console.error('❌ Error en función RPC:', followersError);
+        } else {
+          console.log('✅ Función RPC OK, resultado:', followersResult);
+        }
+      } catch (rpcError) {
+        console.error('❌ Error ejecutando función RPC:', rpcError);
       }
-    } catch (rpcError) {
-      console.error('❌ Error ejecutando función RPC:', rpcError);
     }
     
-    // 5. Probar consulta de seguidores
+    // 6. Probar consulta de seguidores
     console.log('\n📊 Probando consulta de seguidores...');
     const { data: followers, error: followersError } = await supabase
       .from('followed_businesses')
