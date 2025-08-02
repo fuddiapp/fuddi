@@ -28,7 +28,6 @@ import SettingsPage from '@/pages/SettingsPage';
 
 // Componentes de layout
 import BusinessRoute from '@/components/auth/BusinessRoute';
-import DatabaseSetupAlert from '@/components/ui/database-setup-alert';
 
 // Log de diagnóstico
 console.log('🚀 App.tsx: Aplicación iniciando...');
@@ -46,7 +45,6 @@ function App() {
             <ClientPromotionsProvider>
               <FollowedBusinessesProvider>
                 <div className="min-h-screen bg-gray-50">
-                  <DatabaseSetupAlert />
                   <Routes>
                     {/* Rutas públicas */}
                     <Route path="/" element={<ClientHomePage />} />
