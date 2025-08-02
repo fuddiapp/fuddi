@@ -50,16 +50,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Función para determinar el tipo de usuario
   const determineUserType = async (supabaseUser: SupabaseUser): Promise<'client' | 'business' | null> => {
     try {
+      console.log('🔍 AuthContext: determineUserType - Iniciando para usuario:', supabaseUser.id);
+      
       // Primero verificar en user_metadata
       let userType = supabaseUser.user_metadata?.type;
+      console.log('🔍 AuthContext: user_metadata.type:', userType);
       
       if (!userType) {
+        console.log('🔍 AuthContext: No hay user_metadata.type, buscando en tablas...');
+        
         // Buscar en la tabla businesses por ID
         const { data: businessData, error: businessError } = await supabase
           .from('businesses')
           .select('id')
           .eq('id', supabaseUser.id)
           .maybeSingle();
+        
+        console.log('🔍 AuthContext: Búsqueda en businesses por ID:', { businessData, businessError });
         
         if (businessData && !businessError) {
           userType = 'business';
@@ -71,6 +78,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             .eq('email', supabaseUser.email)
             .maybeSingle();
           
+          console.log('🔍 AuthContext: Búsqueda en businesses por email:', { businessDataByEmail, businessErrorByEmail });
+          
           if (businessDataByEmail && !businessErrorByEmail) {
             userType = 'business';
           } else {
@@ -80,6 +89,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .select('id')
               .eq('id', supabaseUser.id)
               .maybeSingle();
+            
+            console.log('🔍 AuthContext: Búsqueda en clients por ID:', { clientData, clientError });
             
             if (clientData && !clientError) {
               userType = 'client';
@@ -91,6 +102,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 .eq('email', supabaseUser.email)
                 .maybeSingle();
               
+              console.log('🔍 AuthContext: Búsqueda en clients por email:', { clientDataByEmail, clientErrorByEmail });
+              
               if (clientDataByEmail && !clientErrorByEmail) {
                 userType = 'client';
               }
@@ -99,8 +112,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
       
-      return userType as 'client' | 'business' | null;
+      console.log('✅ AuthContext: determineUserType - Tipo determinado:', userType);
+      return userType;
     } catch (error) {
+      console.error('❌ AuthContext: determineUserType - Error:', error);
       return null;
     }
   };
@@ -154,11 +169,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Obtener sesión inicial solo una vez
     const getInitialSession = async () => {
       try {
+        console.log('🔍 AuthContext: getInitialSession - Iniciando...');
+        
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔍 AuthContext: getInitialSession - Sesión obtenida:', !!session);
+        
         if (session?.user) {
+          console.log('🔍 AuthContext: getInitialSession - Usuario encontrado:', session.user.id);
+          
           const userType = await determineUserType(session.user);
+          console.log('🔍 AuthContext: getInitialSession - Tipo de usuario determinado:', userType);
+          
           const userData = await createUserObject(session.user, userType);
+          console.log('🔍 AuthContext: getInitialSession - Objeto de usuario creado:', !!userData);
+          
           if (userData) {
+            console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
             // Si es cliente y no existe en la tabla, insertar datos desde localStorage
@@ -169,11 +195,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (userType === 'business') {
               await maybeInsertBusinessData(session.user);
             }
+          } else {
+            console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
           }
+        } else {
+          console.log('🔍 AuthContext: getInitialSession - No hay sesión activa');
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('❌ AuthContext: getInitialSession - Error:', error);
       } finally {
+        console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
         setIsLoading(false);
         setIsInitialized(true);
       }
