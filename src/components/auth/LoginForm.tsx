@@ -52,7 +52,7 @@ const LoginForm = () => {
         .maybeSingle();
       if (client && !clientError) {
         setIsLoading(false);
-        navigate('/client');
+        navigate('/home');
         return;
       }
       setIsLoading(false);

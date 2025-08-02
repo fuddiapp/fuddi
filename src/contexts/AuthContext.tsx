@@ -386,7 +386,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (userType === 'business') {
       window.location.href = '/dashboard';
     } else if (userType === 'client') {
-      window.location.href = '/client';
+      window.location.href = '/home';
     } else {
       window.location.href = '/register/type';
     }

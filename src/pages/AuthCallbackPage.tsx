@@ -14,7 +14,7 @@ const AuthCallbackPage = () => {
         if (user.type === 'business') {
           navigate('/dashboard');
         } else if (user.type === 'client') {
-          navigate('/client');
+          navigate('/home');
         } else {
           navigate('/register/type');
         }
