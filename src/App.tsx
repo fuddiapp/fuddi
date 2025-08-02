@@ -14,6 +14,7 @@ import RegisterTypePage from '@/pages/RegisterTypePage';
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
 
 // Páginas principales
+import LandingPage from '@/pages/LandingPage';
 import ClientHomePage from '@/pages/ClientHomePage';
 import DashboardPage from '@/pages/DashboardPage';
 import PromotionsPage from '@/pages/PromotionsPage';
@@ -47,13 +48,14 @@ function App() {
                 <div className="min-h-screen bg-gray-50">
                   <Routes>
                     {/* Rutas públicas */}
-                    <Route path="/" element={<ClientHomePage />} />
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/register/type" element={<RegisterTypePage />} />
                     <Route path="/auth/callback" element={<AuthCallbackPage />} />
                     
                     {/* Rutas de clientes */}
+                    <Route path="/home" element={<ClientHomePage />} />
                     <Route path="/promotions" element={<AllPromotionsPage />} />
                     <Route path="/promotions/:id" element={<PromotionDetailPage />} />
                     <Route path="/businesses" element={<BusinessesPage />} />
