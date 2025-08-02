@@ -86,6 +86,22 @@ const DashboardPage = () => {
       }
       
       try {
+        // Primero, probar conectividad básica con Supabase
+        console.log('🔍 Dashboard: Probando conectividad con Supabase...');
+        const { data: testData, error: testError } = await supabase
+          .from('businesses')
+          .select('count')
+          .limit(1);
+        
+        if (testError) {
+          console.error('❌ Dashboard: Error de conectividad con Supabase:', testError);
+          setBusinessError(`Error de conexión con la base de datos: ${testError.message}`);
+          setLoadingBusiness(false);
+          return;
+        }
+        
+        console.log('✅ Dashboard: Conectividad con Supabase OK');
+        
         console.log('📊 Dashboard: Consultando negocio para usuario:', user.id);
         const { data, error } = await supabase
           .from('businesses')
