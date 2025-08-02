@@ -75,15 +75,18 @@ const DashboardPage = () => {
   // Cargar datos del negocio
   React.useEffect(() => {
     const fetchBusiness = async () => {
+      console.log('🔄 Dashboard: Iniciando carga de datos del negocio...');
       setLoadingBusiness(true);
       setBusinessError(null);
       
       if (!user?.id) {
+        console.log('❌ Dashboard: No hay usuario autenticado');
         setLoadingBusiness(false);
         return;
       }
       
       try {
+        console.log('📊 Dashboard: Consultando negocio para usuario:', user.id);
         const { data, error } = await supabase
           .from('businesses')
           .select('*')
@@ -91,11 +94,14 @@ const DashboardPage = () => {
           .single();
         
         if (error) {
+          console.error('❌ Dashboard: Error cargando negocio:', error);
           setBusinessError(`No se pudo cargar la información del negocio: ${error.message}`);
         } else {
+          console.log('✅ Dashboard: Negocio cargado exitosamente:', data);
           setBusiness(data);
         }
       } catch (err) {
+        console.error('❌ Dashboard: Error inesperado:', err);
         setBusinessError('Error inesperado al cargar la información del negocio');
       }
       
@@ -105,27 +111,34 @@ const DashboardPage = () => {
     fetchBusiness();
   }, [user]);
 
-
-
   // Cargar menús del día del negocio (solo de la fecha actual)
   const fetchMenus = React.useCallback(async () => {
+    console.log('🔄 Dashboard: Iniciando carga de menús...');
     setLoadingMenus(true);
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('❌ Dashboard: No hay usuario para cargar menús');
+      setLoadingMenus(false);
+      return;
+    }
     
     try {
+      console.log('📊 Dashboard: Consultando menús para usuario:', user.id);
       // Usar el servicio actualizado que filtra por fecha actual
       const menus = await menusDiaService.getMenusDia(user.id);
+      console.log('✅ Dashboard: Menús cargados:', menus);
       setMenusDia(menus);
       
       // Obtener estadísticas de menús usando getCleanupStatus
+      console.log('📊 Dashboard: Obteniendo estadísticas de menús...');
       const cleanupStatus = await menusDiaService.getCleanupStatus();
+      console.log('✅ Dashboard: Estadísticas de menús:', cleanupStatus);
       setMenuStats({
         currentMenus: cleanupStatus.menus.current,
         totalMenus: cleanupStatus.menus.total,
         expiredMenus: cleanupStatus.menus.expired
       });
     } catch (error) {
-      console.error('Error fetching menus:', error);
+      console.error('❌ Dashboard: Error cargando menús:', error);
       setMenusDia([]);
     } finally {
       setLoadingMenus(false);
@@ -147,14 +160,22 @@ const DashboardPage = () => {
   // Cargar productos del negocio
   React.useEffect(() => {
     const fetchProducts = async () => {
+      console.log('🔄 Dashboard: Iniciando carga de productos...');
       setLoadingProducts(true);
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('❌ Dashboard: No hay usuario para cargar productos');
+        setLoadingProducts(false);
+        return;
+      }
       try {
+        console.log('📊 Dashboard: Consultando productos para usuario:', user.id);
         const productos = await getProducts(user.id);
+        console.log('✅ Dashboard: Productos cargados:', productos);
         // Normalizar campo destacado
         const mapped = productos.map(p => ({ ...p, isFeatured: p.is_featured || false }));
         setProducts(mapped);
       } catch (err) {
+        console.error('❌ Dashboard: Error cargando productos:', err);
         setProducts([]);
       } finally {
         setLoadingProducts(false);
@@ -166,14 +187,21 @@ const DashboardPage = () => {
   // Cargar estadísticas del dashboard
   React.useEffect(() => {
     const fetchDashboardStats = async () => {
+      console.log('🔄 Dashboard: Iniciando carga de estadísticas...');
       setLoadingStats(true);
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('❌ Dashboard: No hay usuario para cargar estadísticas');
+        setLoadingStats(false);
+        return;
+      }
       
       try {
+        console.log('📊 Dashboard: Consultando estadísticas para usuario:', user.id);
         const stats = await getDashboardStats(user.id);
+        console.log('✅ Dashboard: Estadísticas cargadas:', stats);
         setDashboardStats(stats);
       } catch (error) {
-        console.error('Error cargando estadísticas del dashboard:', error);
+        console.error('❌ Dashboard: Error cargando estadísticas del dashboard:', error);
         toast.error('Error al cargar estadísticas del dashboard');
       } finally {
         setLoadingStats(false);
