@@ -52,25 +52,30 @@ export async function deletePromotionImage(fileName: string): Promise<void> {
 // Función para obtener todas las promociones
 export async function getPromotions(businessId: string): Promise<Promotion[]> {
   try {
+    console.log('🔍 getPromotions: Iniciando consulta para businessId:', businessId);
+    
     const { data, error } = await supabase
       .from('promotions')
       .select('*')
       .eq('business_id', businessId)
       .order('created_at', { ascending: false });
 
+    console.log('🔍 getPromotions: Resultado de la consulta:', { data, error });
+
     if (error) {
-      console.error('Error al obtener promociones:', error);
+      console.error('❌ getPromotions: Error al obtener promociones:', error);
       // Si es un error de permisos o RLS, devolver array vacío en lugar de lanzar error
       if (error.code === '42501' || error.message.includes('permission denied')) {
-        console.warn('Permisos insuficientes para obtener promociones, devolviendo array vacío');
+        console.warn('⚠️ getPromotions: Permisos insuficientes para obtener promociones, devolviendo array vacío');
         return [];
       }
       throw new Error('Error al obtener las promociones');
     }
 
+    console.log('✅ getPromotions: Promociones obtenidas exitosamente:', data?.length || 0, 'promociones');
     return data || [];
   } catch (error) {
-    console.error('Error en getPromotions:', error);
+    console.error('❌ getPromotions: Error general:', error);
     // En caso de error, devolver array vacío en lugar de lanzar error
     return [];
   }
@@ -428,14 +433,19 @@ export async function getAllPromotionsWithRealRedemptions(
   radiusKm: number = 5
 ): Promise<Promotion[]> {
   try {
+    console.log('🔍 getAllPromotionsWithRealRedemptions: Iniciando consulta para clientes');
+    console.log('🔍 getAllPromotionsWithRealRedemptions: Parámetros:', { userLat, userLng, radiusKm });
+    
     // Usar la función original que ya funciona
     const promotions = await getPromotionsByLocation(userLat || 0, userLng || 0, radiusKm);
+    
+    console.log('✅ getAllPromotionsWithRealRedemptions: Promociones obtenidas:', promotions?.length || 0);
     
     // Por ahora, usar el contador que ya está en la base de datos
     // Esto es más rápido y evita problemas de tipos
     return promotions;
   } catch (error) {
-    console.error('Error en getAllPromotionsWithRealRedemptions:', error);
+    console.error('❌ getAllPromotionsWithRealRedemptions: Error:', error);
     return getPromotionsByLocation(userLat || 0, userLng || 0, radiusKm);
   }
 } 
