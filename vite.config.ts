@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => ({
     },
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        drop_console: false, // Temporalmente deshabilitado para debugging
         drop_debugger: mode === 'production',
       },
     },
