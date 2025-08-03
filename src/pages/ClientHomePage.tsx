@@ -2,10 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserLocation } from '@/contexts/UserLocationContext';
 import { getAllPromotionsWithRealRedemptions } from '@/integrations/supabase/promotions';
-import { Promotion } from '@/types/promotion';
-import PromotionCard from '@/components/promotions/PromotionCard';
-import LocationSelector from '@/components/location/LocationSelector';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Promotion } from '@/integrations/supabase/promotions';
 
 const ClientHomePage: React.FC = () => {
   console.log('🚀 ClientHomePage: Componente iniciando...');
@@ -38,7 +35,8 @@ const ClientHomePage: React.FC = () => {
 
       console.log('📍 ClientHomePage: Ubicación del usuario:', userLocation);
       
-      const promotionsData = await getAllPromotionsWithRealRedemptions(userLocation);
+      // Llamar a la función con los parámetros correctos
+      const promotionsData = await getAllPromotionsWithRealRedemptions(userLocation.latitude, userLocation.longitude);
       console.log('✅ ClientHomePage: Promociones obtenidas:', {
         count: promotionsData.length,
         promotions: promotionsData.slice(0, 3) // Solo mostrar las primeras 3 para el log
@@ -59,7 +57,7 @@ const ClientHomePage: React.FC = () => {
   useEffect(() => {
     console.log('⏰ ClientHomePage: useEffect [userLocation] ejecutado');
     console.log('📍 ClientHomePage: userLocation actual:', userLocation);
-
+    
     if (userLocation) {
       console.log('🚀 ClientHomePage: Iniciando carga de promociones...');
       loadPromotions();
@@ -74,7 +72,7 @@ const ClientHomePage: React.FC = () => {
     console.log('👤 ClientHomePage: Usuario actual:', {
       id: user?.id,
       email: user?.email,
-      type: user?.user_metadata?.type
+      type: (user as any)?.user_metadata?.type
     });
   }, [user]);
 
@@ -90,26 +88,31 @@ const ClientHomePage: React.FC = () => {
     console.log('🚫 ClientHomePage: No hay usuario, mostrando mensaje de carga...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Header con selector de ubicación */}
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Promociones cerca de ti
           </h1>
-          <LocationSelector />
+          <p className="text-gray-600">
+            Ubicación: {userLocation?.address || 'No seleccionada'}
+          </p>
         </div>
-        
+
         {/* Estado de carga */}
         {loading && (
           <div className="text-center py-12">
-            <LoadingSpinner />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto"></div>
             <p className="mt-4 text-gray-600">Cargando promociones...</p>
           </div>
         )}
@@ -133,11 +136,17 @@ const ClientHomePage: React.FC = () => {
         {!loading && !error && promotions.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {promotions.map((promotion) => (
-              <PromotionCard key={promotion.id} promotion={promotion} />
+              <div key={promotion.id} className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold mb-2">{promotion.title}</h3>
+                <p className="text-gray-600 mb-2">{promotion.description}</p>
+                <p className="text-fuddi-purple font-bold">
+                  ${promotion.discounted_price}
+                </p>
+              </div>
             ))}
           </div>
         )}
-        
+
         {/* Sin promociones */}
         {!loading && !error && promotions.length === 0 && userLocation && (
           <div className="text-center py-12">
@@ -148,7 +157,7 @@ const ClientHomePage: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {/* Sin ubicación */}
         {!loading && !error && !userLocation && (
           <div className="text-center py-12">
@@ -156,9 +165,28 @@ const ClientHomePage: React.FC = () => {
               <p className="text-blue-600">
                 Selecciona tu ubicación para ver promociones cerca de ti.
               </p>
-          </div>
+            </div>
           </div>
         )}
+
+        {/* Botón de debug */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => {
+              console.log('🖱️ ClientHomePage: Botón debug clickeado');
+              console.log('📊 ClientHomePage: Estado completo:', {
+                user,
+                userLocation,
+                loading,
+                error,
+                promotionsCount: promotions.length
+              });
+            }}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+          >
+            Debug Info
+          </button>
+        </div>
       </div>
     </div>
   );
