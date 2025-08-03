@@ -144,12 +144,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     let address: string | undefined;
     
-    // TEMPORAL: Saltar consulta a tabla clients para evitar que se cuelgue
     // Si es cliente, obtener la dirección desde la tabla clients
     if (userType === 'client') {
-      console.log('🔍 AuthContext: createUserObject - Saltando consulta a tabla clients (temporal)...');
-      // TEMPORAL: No hacer consulta a Supabase para evitar que se cuelgue
-      // TODO: Investigar por qué la consulta a tabla clients se cuelga
+      console.log('🔍 AuthContext: createUserObject - Obteniendo datos del cliente desde Supabase...');
+      try {
+        // TEMPORAL: Agregar timeout más agresivo para evitar que se cuelgue
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout en consulta a Supabase')), 1000);
+        });
+        
+        console.log('🔍 AuthContext: createUserObject - Iniciando consulta a tabla clients...');
+        const supabasePromise = supabase
+          .from('clients')
+          .select('first_name, last_name, address')
+          .eq('id', supabaseUser.id)
+          .maybeSingle();
+        
+        console.log('🔍 AuthContext: createUserObject - Esperando resultado de consulta...');
+        const { data: clientData, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
+        
+        console.log('🔍 AuthContext: createUserObject - Datos del cliente obtenidos:', { clientData, error });
+        
+        if (clientData && !error) {
+          address = clientData.address;
+          // Usar el nombre completo del cliente si está disponible
+          const fullName = `${clientData.first_name || ''} ${clientData.last_name || ''}`.trim();
+          if (fullName) {
+            console.log('✅ AuthContext: createUserObject - Usuario cliente creado con nombre completo');
+            return {
+              id: supabaseUser.id,
+              name: fullName,
+              email: supabaseUser.email || '',
+              type: userType,
+              token: '',
+              address,
+            };
+          }
+        }
+      } catch (error) {
+        console.error('❌ AuthContext: createUserObject - Error obteniendo datos del cliente:', error);
+        console.log('⚠️ AuthContext: createUserObject - Continuando con datos básicos debido al error');
+      }
     }
     
     console.log('✅ AuthContext: createUserObject - Usuario creado con datos básicos');
