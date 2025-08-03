@@ -150,15 +150,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         // TEMPORAL: Agregar timeout para evitar que se cuelgue
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout en consulta a Supabase')), 5000);
+          setTimeout(() => reject(new Error('Timeout en consulta a Supabase')), 2000);
         });
         
+        console.log('🔍 AuthContext: createUserObject - Iniciando consulta a tabla clients...');
         const supabasePromise = supabase
           .from('clients')
           .select('first_name, last_name, address')
           .eq('id', supabaseUser.id)
           .maybeSingle();
         
+        console.log('🔍 AuthContext: createUserObject - Esperando resultado de consulta...');
         const { data: clientData, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
         
         console.log('🔍 AuthContext: createUserObject - Datos del cliente obtenidos:', { clientData, error });
