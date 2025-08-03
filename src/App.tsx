@@ -149,14 +149,14 @@ function App() {
   console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
-      {/* Habilitar AuthProvider, UserLocationProvider, PromotionsProvider y ClientPromotionsProvider */}
+      {/* Habilitar TODOS los Context Providers */}
       <AuthProvider>
       <UserLocationProvider>
       <PromotionsProvider>
       <ClientPromotionsProvider>
-      {/* <FollowedBusinessesProvider> */}
+      <FollowedBusinessesProvider>
         <AppRoutes />
-      {/* </FollowedBusinessesProvider> */}
+      </FollowedBusinessesProvider>
       </ClientPromotionsProvider>
       </PromotionsProvider>
       </UserLocationProvider>
