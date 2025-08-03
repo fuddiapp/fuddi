@@ -7,7 +7,7 @@ import { Promotion } from '@/integrations/supabase/promotions';
 const ClientHomePage: React.FC = () => {
   console.log('🚀 ClientHomePage: Componente iniciando...');
   
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { userLocation } = useUserLocation();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,16 +90,19 @@ const ClientHomePage: React.FC = () => {
     user: user,
     userExists: !!user,
     userType: user?.type,
-    userMetadata: (user as any)?.user_metadata
+    userMetadata: (user as any)?.user_metadata,
+    authLoading: authLoading
   });
   
-  if (!user) {
-    console.log('🚫 ClientHomePage: No hay usuario, mostrando mensaje de carga...');
+  if (authLoading || !user) {
+    console.log('🚫 ClientHomePage: AuthContext cargando o no hay usuario, mostrando mensaje de carga...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando usuario...</p>
+          <p className="mt-4 text-gray-600">
+            {authLoading ? 'Inicializando sesión...' : 'Cargando usuario...'}
+          </p>
         </div>
       </div>
     );
