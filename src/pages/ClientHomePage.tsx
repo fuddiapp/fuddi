@@ -15,6 +15,7 @@ const ClientHomePage: React.FC = () => {
 
   console.log('🔍 ClientHomePage: Estado inicial:', {
     user: user?.id,
+    userExists: !!user,
     userLocation: userLocation?.address,
     loading,
     promotionsCount: promotions.length
@@ -84,13 +85,21 @@ const ClientHomePage: React.FC = () => {
     hasUserLocation: !!userLocation
   });
 
+  // Verificar si el usuario está cargando (AuthContext puede estar inicializando)
+  console.log('🔍 ClientHomePage: Verificando usuario antes del render:', {
+    user: user,
+    userExists: !!user,
+    userType: user?.type,
+    userMetadata: (user as any)?.user_metadata
+  });
+  
   if (!user) {
     console.log('🚫 ClientHomePage: No hay usuario, mostrando mensaje de carga...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <p className="mt-4 text-gray-600">Cargando usuario...</p>
         </div>
       </div>
     );
