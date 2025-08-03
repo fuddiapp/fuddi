@@ -42,27 +42,28 @@ console.log('VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KE
 // Componente para proteger rutas públicas (landing page, login, register)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   console.log('🔒 App.tsx: PublicRoute renderizando...');
-  const { user, isLoading } = useAuth();
+  // TEMPORAL: Comentar useAuth para diagnosticar
+  // const { user, isLoading } = useAuth();
   
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-gray-50">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Cargando...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
   
-  if (user) {
-    // Si el usuario está autenticado, redirigir según su tipo
-    if (user.type === 'business') {
-      return <Navigate to="/dashboard" replace />;
-    } else {
-      return <Navigate to="/home" replace />;
-    }
-  }
+  // if (user) {
+  //   // Si el usuario está autenticado, redirigir según su tipo
+  //   if (user.type === 'business') {
+  //     return <Navigate to="/dashboard" replace />;
+  //   } else {
+  //     return <Navigate to="/home" replace />;
+  //   }
+  // }
   
   return <>{children}</>;
 };
@@ -148,7 +149,8 @@ function App() {
   console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
-      <AuthProvider>
+      {/* TEMPORAL: Comentar AuthProvider para diagnosticar */}
+      {/* <AuthProvider> */}
         <UserLocationProvider>
           <PromotionsProvider>
             <ClientPromotionsProvider>
@@ -158,7 +160,7 @@ function App() {
             </ClientPromotionsProvider>
           </PromotionsProvider>
         </UserLocationProvider>
-      </AuthProvider>
+      {/* </AuthProvider> */}
     </Router>
   );
 }
