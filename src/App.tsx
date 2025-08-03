@@ -29,6 +29,7 @@ import FollowedBusinessesPage from '@/pages/FollowedBusinessesPage';
 import DailyMenuPage from '@/pages/DailyMenuPage';
 import SettingsPage from '@/pages/SettingsPage';
 import ProfilePage from '@/pages/Profile';
+import AnalyticsPage from '@/pages/AnalyticsPage';
 
 // Componentes de layout
 import BusinessRoute from '@/components/auth/BusinessRoute';
@@ -124,6 +125,11 @@ function AppRoutes() {
                   <DashboardPage />
                 </BusinessRoute>
               } />
+        <Route path="/analytics" element={
+          <BusinessRoute>
+            <AnalyticsPage />
+          </BusinessRoute>
+        } />
         <Route path="/promotions/manage" element={
                 <BusinessRoute>
                   <PromotionsPage />

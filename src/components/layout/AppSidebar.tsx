@@ -16,13 +16,13 @@ import {
 import { 
   LayoutDashboard, 
   Tag, 
- 
   Settings,
   LogOut,
   Utensils,
   QrCode,
   Building2,
-  Package
+  Package,
+  TrendingUp
 } from 'lucide-react';
 
 const AppSidebar = () => {
@@ -68,6 +68,11 @@ const AppSidebar = () => {
       title: "Código QR",
       url: "/qr-codes",
       icon: QrCode,
+    },
+    {
+      title: "Rendimiento",
+      url: "/analytics",
+      icon: TrendingUp,
     },
 
     {
