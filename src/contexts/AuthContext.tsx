@@ -135,11 +135,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (userType === 'client') {
       console.log('🔍 AuthContext: createUserObject - Obteniendo datos del cliente desde Supabase...');
       try {
-        const { data: clientData, error } = await supabase
+        // TEMPORAL: Agregar timeout para evitar que se cuelgue
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout en consulta a Supabase')), 5000);
+        });
+        
+        const supabasePromise = supabase
           .from('clients')
           .select('first_name, last_name, address')
           .eq('id', supabaseUser.id)
           .maybeSingle();
+        
+        const { data: clientData, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
         
         console.log('🔍 AuthContext: createUserObject - Datos del cliente obtenidos:', { clientData, error });
         
@@ -161,6 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('❌ AuthContext: createUserObject - Error obteniendo datos del cliente:', error);
+        console.log('⚠️ AuthContext: createUserObject - Continuando con datos básicos debido al error');
       }
     }
     
