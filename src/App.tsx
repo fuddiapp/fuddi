@@ -152,13 +152,13 @@ function App() {
       {/* TEMPORAL: Comentar todos los providers para diagnosticar */}
       {/* <AuthProvider> */}
       {/* <UserLocationProvider> */}
-        <PromotionsProvider>
-          <ClientPromotionsProvider>
-            <FollowedBusinessesProvider>
-              <AppRoutes />
-            </FollowedBusinessesProvider>
-          </ClientPromotionsProvider>
-        </PromotionsProvider>
+      {/* <PromotionsProvider> */}
+      {/* <ClientPromotionsProvider> */}
+      {/* <FollowedBusinessesProvider> */}
+        <AppRoutes />
+      {/* </FollowedBusinessesProvider> */}
+      {/* </ClientPromotionsProvider> */}
+      {/* </PromotionsProvider> */}
       {/* </UserLocationProvider> */}
       {/* </AuthProvider> */}
     </Router>
