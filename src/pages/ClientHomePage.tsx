@@ -49,21 +49,24 @@ interface RealPromotion {
 const ClientHomePage: React.FC = () => {
   console.log('🚀 ClientHomePage: Componente iniciando...');
   
-  const { user } = useAuth();
-  const { userLocation } = useUserLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // Logs de diagnóstico
-  React.useEffect(() => {
-    console.log('🔍 ClientHomePage: Componente montado');
-    console.log('👤 ClientHomePage: Usuario:', user);
-    console.log('📍 ClientHomePage: Ubicación:', userLocation);
-    console.log('🔑 ClientHomePage: Variables de entorno:');
-    console.log('  - VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ No configurada');
-    console.log('  - VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ No configurada');
-    console.log('  - VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
-  }, [user, userLocation]);
+  try {
+    const { user } = useAuth();
+    const { userLocation } = useUserLocation();
+    const navigate = useNavigate();
+    const { toast } = useToast();
+    
+    console.log('✅ ClientHomePage: Hooks inicializados correctamente');
+    
+    // Logs de diagnóstico
+    React.useEffect(() => {
+      console.log('🔍 ClientHomePage: Componente montado');
+      console.log('👤 ClientHomePage: Usuario:', user);
+      console.log('📍 ClientHomePage: Ubicación:', userLocation);
+      console.log('🔑 ClientHomePage: Variables de entorno:');
+      console.log('  - VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ No configurada');
+      console.log('  - VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ No configurada');
+      console.log('  - VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
+    }, [user, userLocation]);
   
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
@@ -661,6 +664,24 @@ const ClientHomePage: React.FC = () => {
       />
     </>
   );
+  } catch (error) {
+    console.error('❌ ClientHomePage: Error en el componente:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-6xl mb-4">😵</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Error en el componente</h3>
+          <p className="text-gray-600 mb-6">Ocurrió un error inesperado. Por favor, recarga la página.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-fuddi-purple text-white px-6 py-2 rounded-lg hover:bg-fuddi-purple-light transition-colors"
+          >
+            Recargar página
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default ClientHomePage; 
