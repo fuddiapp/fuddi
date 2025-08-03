@@ -52,77 +52,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('🔍 AuthContext: determineUserType - Iniciando para usuario:', supabaseUser.id);
       
-      // Primero verificar en user_metadata
+      // TEMPORAL: Usar solo user_metadata para evitar consultas que se cuelgan
       let userType = supabaseUser.user_metadata?.type;
       console.log('🔍 AuthContext: user_metadata.type:', userType);
       
+      // Si no hay user_metadata.type, asumir cliente por defecto
       if (!userType) {
-        console.log('🔍 AuthContext: No hay user_metadata.type, buscando en tablas...');
-        
-        // TEMPORAL: Agregar timeout para evitar que se cuelgue
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout en determineUserType')), 3000);
-        });
-        
-        // Buscar en la tabla businesses por ID
-        const businessPromise = supabase
-          .from('businesses')
-          .select('id')
-          .eq('id', supabaseUser.id)
-          .maybeSingle();
-        
-        const { data: businessData, error: businessError } = await Promise.race([businessPromise, timeoutPromise]) as any;
-        
-        console.log('🔍 AuthContext: Búsqueda en businesses por ID:', { businessData, businessError });
-        
-        if (businessData && !businessError) {
-          userType = 'business';
-        } else {
-          // Buscar en la tabla businesses por email
-          const businessByEmailPromise = supabase
-            .from('businesses')
-            .select('id')
-            .eq('email', supabaseUser.email)
-            .maybeSingle();
-          
-          const { data: businessDataByEmail, error: businessErrorByEmail } = await Promise.race([businessByEmailPromise, timeoutPromise]) as any;
-          
-          console.log('🔍 AuthContext: Búsqueda en businesses por email:', { businessDataByEmail, businessErrorByEmail });
-          
-          if (businessDataByEmail && !businessErrorByEmail) {
-            userType = 'business';
-          } else {
-            // Buscar en la tabla clients por ID
-            const clientPromise = supabase
-              .from('clients')
-              .select('id')
-              .eq('id', supabaseUser.id)
-              .maybeSingle();
-            
-            const { data: clientData, error: clientError } = await Promise.race([clientPromise, timeoutPromise]) as any;
-            
-            console.log('🔍 AuthContext: Búsqueda en clients por ID:', { clientData, clientError });
-            
-            if (clientData && !clientError) {
-              userType = 'client';
-            } else {
-              // Buscar en la tabla clients por email
-              const clientByEmailPromise = supabase
-                .from('clients')
-                .select('id')
-                .eq('email', supabaseUser.email)
-                .maybeSingle();
-              
-              const { data: clientDataByEmail, error: clientErrorByEmail } = await Promise.race([clientByEmailPromise, timeoutPromise]) as any;
-              
-              console.log('🔍 AuthContext: Búsqueda en clients por email:', { clientDataByEmail, clientErrorByEmail });
-              
-              if (clientDataByEmail && !clientErrorByEmail) {
-                userType = 'client';
-              }
-            }
-          }
-        }
+        console.log('🔍 AuthContext: No hay user_metadata.type, asumiendo cliente por defecto');
+        userType = 'client';
       }
       
       console.log('✅ AuthContext: determineUserType - Tipo determinado:', userType);
@@ -144,47 +81,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     let address: string | undefined;
     
-    // Si es cliente, obtener la dirección desde la tabla clients
+    // TEMPORAL: Saltar consulta a tabla clients para evitar que se cuelgue
     if (userType === 'client') {
-      console.log('🔍 AuthContext: createUserObject - Obteniendo datos del cliente desde Supabase...');
-      try {
-        // TEMPORAL: Agregar timeout más agresivo para evitar que se cuelgue
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout en consulta a Supabase')), 1000);
-        });
-        
-        console.log('🔍 AuthContext: createUserObject - Iniciando consulta a tabla clients...');
-        const supabasePromise = supabase
-          .from('clients')
-          .select('first_name, last_name, address')
-          .eq('id', supabaseUser.id)
-          .maybeSingle();
-        
-        console.log('🔍 AuthContext: createUserObject - Esperando resultado de consulta...');
-        const { data: clientData, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
-        
-        console.log('🔍 AuthContext: createUserObject - Datos del cliente obtenidos:', { clientData, error });
-        
-        if (clientData && !error) {
-          address = clientData.address;
-          // Usar el nombre completo del cliente si está disponible
-          const fullName = `${clientData.first_name || ''} ${clientData.last_name || ''}`.trim();
-          if (fullName) {
-            console.log('✅ AuthContext: createUserObject - Usuario cliente creado con nombre completo');
-            return {
-              id: supabaseUser.id,
-              name: fullName,
-              email: supabaseUser.email || '',
-              type: userType,
-              token: '',
-              address,
-            };
-          }
-        }
-      } catch (error) {
-        console.error('❌ AuthContext: createUserObject - Error obteniendo datos del cliente:', error);
-        console.log('⚠️ AuthContext: createUserObject - Continuando con datos básicos debido al error');
-      }
+      console.log('🔍 AuthContext: createUserObject - Saltando consulta a tabla clients (temporal)...');
+      // TODO: Investigar por qué la consulta a tabla clients se cuelga
     }
     
     console.log('✅ AuthContext: createUserObject - Usuario creado con datos básicos');
