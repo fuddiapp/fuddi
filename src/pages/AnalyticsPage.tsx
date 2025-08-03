@@ -86,7 +86,7 @@ const AnalyticsPage: React.FC = () => {
 
       // 1. Obtener canjes del negocio
       const { data: redemptions, error: redemptionsError } = await supabase
-        .from('redemptions')
+        .from('promotion_redemptions')
         .select(`
           id,
           created_at,
