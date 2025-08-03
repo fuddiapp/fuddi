@@ -1,7 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { useStableEffect } from '@/hooks/use-stable-effect';
 
 interface User {
   id: string;
@@ -9,7 +7,7 @@ interface User {
   email: string;
   type: 'client' | 'business';
   token: string;
-  address?: string; // Dirección del usuario (para clientes)
+  address?: string;
   businessInfo?: {
     businessName: string;
     businessType: string;
@@ -32,7 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -45,47 +43,14 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Función para determinar el tipo de usuario
-  const determineUserType = async (supabaseUser: SupabaseUser): Promise<'client' | 'business' | null> => {
-    try {
-      console.log('🔍 AuthContext: determineUserType - Iniciando para usuario:', supabaseUser.id);
-      
-      // TEMPORAL: Usar solo user_metadata para evitar consultas que se cuelgan
-      let userType = supabaseUser.user_metadata?.type;
-      console.log('🔍 AuthContext: user_metadata.type:', userType);
-      
-      // Si no hay user_metadata.type, asumir cliente por defecto
-      if (!userType) {
-        console.log('🔍 AuthContext: No hay user_metadata.type, asumiendo cliente por defecto');
-        userType = 'client';
-      }
-      
-      console.log('✅ AuthContext: determineUserType - Tipo determinado:', userType);
-      return userType;
-    } catch (error) {
-      console.error('❌ AuthContext: determineUserType - Error:', error);
-      return null;
-    }
-  };
-
-  // Función para crear objeto de usuario
-  const createUserObject = async (supabaseUser: SupabaseUser, userType: 'client' | 'business' | null): Promise<User | null> => {
-    console.log('🔍 AuthContext: createUserObject - Iniciando para usuario:', supabaseUser.id, 'tipo:', userType);
+  // Función simplificada para crear objeto de usuario
+  const createUserObject = (supabaseUser: any): User | null => {
+    console.log('🔍 AuthContext: createUserObject - Iniciando para usuario:', supabaseUser.id);
     
-    if (!userType) {
-      console.log('❌ AuthContext: createUserObject - No hay tipo de usuario');
-      return null;
-    }
-    
-    let address: string | undefined;
-    
-    // TEMPORAL: Saltar consulta a tabla clients para evitar que se cuelgue
-    if (userType === 'client') {
-      console.log('🔍 AuthContext: createUserObject - Saltando consulta a tabla clients (temporal)...');
-      // TODO: Investigar por qué la consulta a tabla clients se cuelga
-    }
+    // Usar user_metadata para determinar el tipo
+    const userType = supabaseUser.user_metadata?.type || 'client';
+    console.log('🔍 AuthContext: user_metadata.type:', userType);
     
     console.log('✅ AuthContext: createUserObject - Usuario creado con datos básicos');
     return {
@@ -94,88 +59,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       email: supabaseUser.email || '',
       type: userType,
       token: '',
-      address,
     };
   };
 
-  useStableEffect(() => {
-    // Obtener sesión inicial solo una vez
-    const getInitialSession = async () => {
-      console.log('🚀 AuthContext: getInitialSession - Iniciando...');
-      try {
-        console.log('🔍 AuthContext: getInitialSession - Iniciando...');
+  // Función simplificada para obtener sesión inicial
+  const getInitialSession = async () => {
+    console.log('🚀 AuthContext: getInitialSession - Iniciando...');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔍 AuthContext: getInitialSession - Sesión obtenida:', !!session);
+      
+      if (session?.user) {
+        console.log('🔍 AuthContext: getInitialSession - Usuario encontrado:', session.user.id);
         
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('🔍 AuthContext: getInitialSession - Sesión obtenida:', !!session);
+        const userData = createUserObject(session.user);
+        console.log('🔍 AuthContext: getInitialSession - Objeto de usuario creado:', !!userData);
         
-        if (session?.user) {
-          console.log('🔍 AuthContext: getInitialSession - Usuario encontrado:', session.user.id);
-          
-          const userType = await determineUserType(session.user);
-          console.log('🔍 AuthContext: getInitialSession - Tipo de usuario determinado:', userType);
-          
-          const userData = await createUserObject(session.user, userType);
-          console.log('🔍 AuthContext: getInitialSession - Objeto de usuario creado:', !!userData);
-          
-          if (userData) {
-            console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
-            setUser(userData);
-            localStorage.setItem('fuddi-user', JSON.stringify(userData));
-            // TEMPORAL: Comentar las funciones maybeInsert para evitar que se cuelguen
-            // Si es cliente y no existe en la tabla, insertar datos desde localStorage
-            // if (userType === 'client') {
-            //   await maybeInsertClientData(session.user);
-            // }
-            // Si es negocio y no existe en la tabla, insertar datos desde localStorage
-            // if (userType === 'business') {
-            //   await maybeInsertBusinessData(session.user);
-            // }
-          } else {
-            console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
-          }
+        if (userData) {
+          console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
+          setUser(userData);
+          localStorage.setItem('fuddi-user', JSON.stringify(userData));
         } else {
-          console.log('🔍 AuthContext: getInitialSession - No hay sesión activa');
+          console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
         }
-      } catch (error) {
-        console.error('❌ AuthContext: getInitialSession - Error:', error);
-      } finally {
-        console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
-        setIsLoading(false);
-        setIsInitialized(true);
-        console.log('✅ AuthContext: Estados actualizados - isLoading: false, isInitialized: true');
+      } else {
+        console.log('🔍 AuthContext: getInitialSession - No hay sesión activa');
       }
-    };
+    } catch (error) {
+      console.error('❌ AuthContext: getInitialSession - Error:', error);
+    } finally {
+      console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
+      setIsLoading(false);
+    }
+  };
 
+  // useEffect simple en lugar de useStableEffect
+  useEffect(() => {
     getInitialSession();
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Solo procesar eventos de autenticación, no re-inicializar
+        console.log('🔍 AuthContext: onAuthStateChange - Evento:', event);
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          const userType = await determineUserType(session.user);
-          const userData = await createUserObject(session.user, userType);
+          const userData = createUserObject(session.user);
           if (userData) {
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
-            // TEMPORAL: Comentar las funciones maybeInsert para evitar que se cuelguen
-            // Si es cliente y no existe en la tabla, insertar datos desde localStorage
-            // if (userType === 'client') {
-            //   await maybeInsertClientData(session.user);
-            // }
-            // Si es negocio y no existe en la tabla, insertar datos desde localStorage
-            // if (userType === 'business') {
-            //   await maybeInsertBusinessData(session.user);
-            // }
-            // Redirigir según el tipo de usuario
-            redirectUser(userType);
-          } else {
-            redirectUser(null);
+            console.log('✅ AuthContext: Usuario autenticado:', userData.type);
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           localStorage.removeItem('fuddi-user');
-          window.location.href = '/';
+          console.log('✅ AuthContext: Usuario desconectado');
         }
       }
     );
@@ -183,174 +120,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Función para insertar datos de cliente tras el primer login si no existe en la tabla
-  const maybeInsertClientData = async (supabaseUser: SupabaseUser) => {
-    try {
-      console.log('🔍 AuthContext: maybeInsertClientData - Iniciando...');
-      
-      // TEMPORAL: Agregar timeout para evitar que se cuelgue
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout en maybeInsertClientData')), 3000);
-      });
-      
-      const supabasePromise = supabase
-        .from('clients')
-        .select('id')
-        .eq('id', supabaseUser.id)
-        .maybeSingle();
-      
-      const { data: client, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
-      
-      console.log('🔍 AuthContext: maybeInsertClientData - Consulta completada:', { client, error });
-      
-      if (!client && !error) {
-        const regData = localStorage.getItem('fuddi-client-registration');
-        if (regData) {
-          const { email, firstName, lastName, address } = JSON.parse(regData);
-          // Insertar en la tabla clients
-          const { error: insertError } = await supabase.from('clients').insert({
-            id: supabaseUser.id,
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            address,
-          });
-          if (!insertError) {
-            localStorage.removeItem('fuddi-client-registration');
-            // Vuelve a determinar el tipo y redirige
-            const userType = await determineUserType(supabaseUser);
-            redirectUser(userType);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('❌ AuthContext: maybeInsertClientData - Error:', error);
-      console.log('⚠️ AuthContext: maybeInsertClientData - Continuando sin insertar datos');
-    }
-  };
-
-  // Función para insertar datos de negocio tras el primer login si no existe en la tabla
-  const maybeInsertBusinessData = async (supabaseUser: SupabaseUser) => {
-    try {
-      console.log('🔍 AuthContext: maybeInsertBusinessData - Iniciando...');
-      
-      // TEMPORAL: Agregar timeout para evitar que se cuelgue
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout en maybeInsertBusinessData')), 3000);
-      });
-      
-      const supabasePromise = supabase
-        .from('businesses')
-        .select('id')
-        .eq('id', supabaseUser.id)
-        .maybeSingle();
-      
-      const { data: business, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
-      
-      console.log('🔍 AuthContext: maybeInsertBusinessData - Consulta completada:', { business, error });
-      
-      if (error) {
-        console.error('❌ Error verificando negocio:', error);
-        return;
-      }
-      
-      if (!business) {
-        console.log('📝 Negocio no existe, verificando datos en localStorage...');
-        const regData = localStorage.getItem('fuddi-business-registration');
-        if (regData) {
-          console.log('✅ Datos de registro encontrados en localStorage');
-          const businessData = JSON.parse(regData);
-          console.log('📋 Datos del negocio:', businessData);
-          
-          // Manejar logo si existe
-          let logoUrl = '';
-          if (businessData.logo) {
-            try {
-              console.log('🖼️ Procesando logo...');
-              // Convertir base64 a blob si es necesario
-              let logoFile = businessData.logo;
-              if (typeof businessData.logo === 'string' && businessData.logo.startsWith('data:')) {
-                const response = await fetch(businessData.logo);
-                logoFile = await response.blob();
-              }
-              
-              const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('business-logos')
-                .upload(`logos/${supabaseUser.id}`, logoFile, { upsert: true });
-              
-              if (!uploadError) {
-                logoUrl = supabase.storage.from('business-logos').getPublicUrl(`logos/${supabaseUser.id}`).data.publicUrl;
-                console.log('✅ Logo subido correctamente:', logoUrl);
-              } else {
-                console.error('❌ Error subiendo logo:', uploadError);
-              }
-            } catch (logoError) {
-              console.error('❌ Error procesando logo:', logoError);
-            }
-          }
-          
-          // Insertar en la tabla businesses
-          console.log('💾 Insertando negocio en la base de datos...');
-          console.log('📋 Datos a insertar:', {
-            id: supabaseUser.id,
-            ...businessData,
-            logo_url: logoUrl,
-          });
-          
-          // Preparar datos con el formato correcto
-          const insertData = {
-            id: supabaseUser.id,
-            email: businessData.email,
-            business_name: businessData.business_name,
-            category: businessData.category,
-            description: businessData.description || '',
-            address: businessData.address,
-            opening_time: businessData.opening_time,
-            closing_time: businessData.closing_time,
-            logo_url: logoUrl || null,
-            location_lat: businessData.location_lat || null,
-            location_lng: businessData.location_lng || null,
-          };
-          
-          console.log('📋 Datos formateados:', insertData);
-          
-          const { error: insertError } = await supabase.from('businesses').insert(insertData);
-          
-          if (!insertError) {
-            console.log('✅ Negocio insertado correctamente');
-            localStorage.removeItem('fuddi-business-registration');
-            // Vuelve a determinar el tipo y redirige
-            const userType = await determineUserType(supabaseUser);
-            redirectUser(userType);
-          } else {
-            console.error('❌ Error insertando negocio:', insertError);
-          }
-        } else {
-          console.log('❌ No se encontraron datos de registro en localStorage');
-        }
-      } else {
-        console.log('✅ Negocio ya existe en la base de datos');
-      }
-    } catch (error) {
-      console.error('❌ AuthContext: maybeInsertBusinessData - Error:', error);
-      console.log('⚠️ AuthContext: maybeInsertBusinessData - Continuando sin insertar datos');
-    }
-  };
-
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem('fuddi-user', JSON.stringify(userData));
-  };
-
-  // Función para redirigir según el tipo de usuario
-  const redirectUser = (userType: 'client' | 'business' | null) => {
-    if (userType === 'business') {
-      window.location.href = '/dashboard';
-    } else if (userType === 'client') {
-      window.location.href = '/home';
-    } else {
-      window.location.href = '/register/type';
-    }
   };
 
   const logout = async () => {
@@ -359,18 +131,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('fuddi-user');
   };
 
-  const isBusiness = user?.type === 'business';
-  const isClient = user?.type === 'client';
-  const isAuthenticated = !!user;
-
   const value: AuthContextType = {
     user,
     isLoading,
     login,
     logout,
-    isBusiness,
-    isClient,
-    isAuthenticated,
+    isBusiness: user?.type === 'business',
+    isClient: user?.type === 'client',
+    isAuthenticated: !!user,
   };
 
   return (
