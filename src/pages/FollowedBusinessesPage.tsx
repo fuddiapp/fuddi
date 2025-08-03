@@ -296,7 +296,7 @@ const FollowedBusinessesPage: React.FC = () => {
   }, [searchQuery, categoryFilter, statusFilter, sortFilter, convertedBusinesses, userLocation]);
 
   const handleBusinessClick = (business: BusinessCardData) => {
-    navigate(`/business/${business.id}`);
+    navigate(`/businesses/${business.id}`);
   };
 
   const handlePromotionClick = (promotion: PromotionCardData) => {

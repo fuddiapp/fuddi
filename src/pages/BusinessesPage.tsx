@@ -161,7 +161,7 @@ const BusinessesPage: React.FC = () => {
   }, [searchQuery, selectedCategory, convertedBusinesses, userLocation]);
 
   const handleBusinessClick = (business: any) => {
-    navigate(`/business/${business.id}`);
+    navigate(`/businesses/${business.id}`);
   };
 
   const handleNotificationsClick = () => {

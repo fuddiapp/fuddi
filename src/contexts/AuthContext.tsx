@@ -63,35 +63,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Función simplificada para obtener sesión inicial
-  const getInitialSession = async () => {
+    const getInitialSession = async () => {
     console.log('🚀 AuthContext: getInitialSession - Iniciando...');
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
       console.log('🔍 AuthContext: getInitialSession - Sesión obtenida:', !!session);
       
-      if (session?.user) {
+        if (session?.user) {
         console.log('🔍 AuthContext: getInitialSession - Usuario encontrado:', session.user.id);
         
         const userData = createUserObject(session.user);
         console.log('🔍 AuthContext: getInitialSession - Objeto de usuario creado:', !!userData);
         
-        if (userData) {
+          if (userData) {
           console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
-          setUser(userData);
-          localStorage.setItem('fuddi-user', JSON.stringify(userData));
+            setUser(userData);
+            localStorage.setItem('fuddi-user', JSON.stringify(userData));
         } else {
           console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
         }
       } else {
         console.log('🔍 AuthContext: getInitialSession - No hay sesión activa');
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error('❌ AuthContext: getInitialSession - Error:', error);
-    } finally {
+      } finally {
       console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
-      setIsLoading(false);
-    }
-  };
+        setIsLoading(false);
+      }
+    };
 
   // useEffect simple en lugar de useStableEffect
   useEffect(() => {

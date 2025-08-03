@@ -417,7 +417,7 @@ const ClientHomePage: React.FC = () => {
   };
 
   const handleSettingsClick = () => {
-    navigate('/settings');
+    navigate('/profile');
   };
 
   // Mostrar loading mientras se cargan los datos

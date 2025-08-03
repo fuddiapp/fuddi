@@ -1,0 +1,10 @@
+[33m0f18582[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Enable FollowedBusinessesProvider - all Context Providers now active
+[33ma26fcca[m Enable ClientPromotionsProvider to test if it works with the new AuthContext
+[33mdfc0a4e[m Enable PromotionsProvider to test if it works with the new AuthContext
+[33me6b5f13[m Enable UserLocationProvider to test if it works with the new AuthContext
+[33ma40294a[m Create completely new simplified AuthContext without useStableEffect or problematic queries
+[33m66477af[m Disable AuthProvider again to stabilize the application
+[33m4b39879[m Create simplified AuthContext that avoids problematic Supabase queries
+[33m014e83c[m Disable AuthProvider again to avoid hanging Supabase queries
+[33mcf03128[m Restore clients table query with 1-second timeout
+[33m71af1e8[m Temporarily skip clients table query to avoid hanging issue
