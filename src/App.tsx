@@ -28,6 +28,7 @@ import BusinessDetailPage from '@/pages/BusinessDetailPage';
 import FollowedBusinessesPage from '@/pages/FollowedBusinessesPage';
 import DailyMenuPage from '@/pages/DailyMenuPage';
 import SettingsPage from '@/pages/SettingsPage';
+import ProfilePage from '@/pages/Profile';
 
 // Componentes de layout
 import BusinessRoute from '@/components/auth/BusinessRoute';
@@ -108,11 +109,13 @@ function AppRoutes() {
               
         {/* Rutas de clientes */}
         <Route path="/home" element={<ClientHomePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/promotions" element={<AllPromotionsPage />} />
+        <Route path="/promotion/:id" element={<PromotionDetailPage />} />
         <Route path="/promotions/:id" element={<PromotionDetailPage />} />
-              <Route path="/businesses" element={<BusinessesPage />} />
+        <Route path="/businesses" element={<BusinessesPage />} />
         <Route path="/businesses/:id" element={<BusinessDetailPage />} />
-              <Route path="/followed" element={<FollowedBusinessesPage />} />
+        <Route path="/followed" element={<FollowedBusinessesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
               
         {/* Rutas de negocios */}
@@ -157,12 +160,12 @@ function App() {
       <FollowedBusinessesProvider>
         <AppRoutes />
       </FollowedBusinessesProvider>
-      </ClientPromotionsProvider>
+          </ClientPromotionsProvider>
       </PromotionsProvider>
-      </UserLocationProvider>
-      </AuthProvider>
+  </UserLocationProvider>
+    </AuthProvider>
     </Router>
-  );
+);
 }
 
 export default App;
