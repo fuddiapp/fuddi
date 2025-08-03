@@ -168,6 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useStableEffect(() => {
     // Obtener sesión inicial solo una vez
     const getInitialSession = async () => {
+      console.log('🚀 AuthContext: getInitialSession - Iniciando...');
       try {
         console.log('🔍 AuthContext: getInitialSession - Iniciando...');
         
@@ -207,6 +208,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
         setIsLoading(false);
         setIsInitialized(true);
+        console.log('✅ AuthContext: Estados actualizados - isLoading: false, isInitialized: true');
       }
     };
 
