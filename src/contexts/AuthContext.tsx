@@ -59,12 +59,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!userType) {
         console.log('🔍 AuthContext: No hay user_metadata.type, buscando en tablas...');
         
+        // TEMPORAL: Agregar timeout para evitar que se cuelgue
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout en determineUserType')), 3000);
+        });
+        
         // Buscar en la tabla businesses por ID
-        const { data: businessData, error: businessError } = await supabase
+        const businessPromise = supabase
           .from('businesses')
           .select('id')
           .eq('id', supabaseUser.id)
           .maybeSingle();
+        
+        const { data: businessData, error: businessError } = await Promise.race([businessPromise, timeoutPromise]) as any;
         
         console.log('🔍 AuthContext: Búsqueda en businesses por ID:', { businessData, businessError });
         
@@ -72,11 +79,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userType = 'business';
         } else {
           // Buscar en la tabla businesses por email
-          const { data: businessDataByEmail, error: businessErrorByEmail } = await supabase
+          const businessByEmailPromise = supabase
             .from('businesses')
             .select('id')
             .eq('email', supabaseUser.email)
             .maybeSingle();
+          
+          const { data: businessDataByEmail, error: businessErrorByEmail } = await Promise.race([businessByEmailPromise, timeoutPromise]) as any;
           
           console.log('🔍 AuthContext: Búsqueda en businesses por email:', { businessDataByEmail, businessErrorByEmail });
           
@@ -84,11 +93,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             userType = 'business';
           } else {
             // Buscar en la tabla clients por ID
-            const { data: clientData, error: clientError } = await supabase
+            const clientPromise = supabase
               .from('clients')
               .select('id')
               .eq('id', supabaseUser.id)
               .maybeSingle();
+            
+            const { data: clientData, error: clientError } = await Promise.race([clientPromise, timeoutPromise]) as any;
             
             console.log('🔍 AuthContext: Búsqueda en clients por ID:', { clientData, clientError });
             
@@ -96,11 +107,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               userType = 'client';
             } else {
               // Buscar en la tabla clients por email
-              const { data: clientDataByEmail, error: clientErrorByEmail } = await supabase
+              const clientByEmailPromise = supabase
                 .from('clients')
                 .select('id')
                 .eq('email', supabaseUser.email)
                 .maybeSingle();
+              
+              const { data: clientDataByEmail, error: clientErrorByEmail } = await Promise.race([clientByEmailPromise, timeoutPromise]) as any;
               
               console.log('🔍 AuthContext: Búsqueda en clients por email:', { clientDataByEmail, clientErrorByEmail });
               

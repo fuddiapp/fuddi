@@ -42,28 +42,28 @@ console.log('VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KE
 // Componente para proteger rutas públicas (landing page, login, register)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   console.log('🔒 App.tsx: PublicRoute renderizando...');
-  // TEMPORAL: Comentar useAuth para diagnosticar
-  // const { user, isLoading } = useAuth();
+  // TEMPORAL: Habilitar useAuth para probar timeouts
+  const { user, isLoading } = useAuth();
   
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto mb-4"></div>
-  //         <p className="text-gray-600">Cargando...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuddi-purple mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
   
-  // if (user) {
-  //   // Si el usuario está autenticado, redirigir según su tipo
-  //   if (user.type === 'business') {
-  //     return <Navigate to="/dashboard" replace />;
-  //   } else {
-  //     return <Navigate to="/home" replace />;
-  //   }
-  // }
+  if (user) {
+    // Si el usuario está autenticado, redirigir según su tipo
+    if (user.type === 'business') {
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      return <Navigate to="/home" replace />;
+    }
+  }
   
   return <>{children}</>;
 };
@@ -72,7 +72,7 @@ function AppRoutes() {
   console.log('🔄 App.tsx: AppRoutes renderizando...');
   return (
     <div className="min-h-screen bg-gray-50">
-      <Routes>
+            <Routes>
         {/* Rutas públicas (protegidas para usuarios autenticados) */}
         <Route path="/" element={
           <PublicRoute>
@@ -104,42 +104,42 @@ function AppRoutes() {
             <BusinessRegisterPage />
           </PublicRoute>
         } />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
+              
         {/* Rutas de clientes */}
         <Route path="/home" element={<ClientHomePage />} />
         <Route path="/promotions" element={<AllPromotionsPage />} />
         <Route path="/promotions/:id" element={<PromotionDetailPage />} />
-        <Route path="/businesses" element={<BusinessesPage />} />
+              <Route path="/businesses" element={<BusinessesPage />} />
         <Route path="/businesses/:id" element={<BusinessDetailPage />} />
-        <Route path="/followed" element={<FollowedBusinessesPage />} />
+              <Route path="/followed" element={<FollowedBusinessesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        
+              
         {/* Rutas de negocios */}
-        <Route path="/dashboard" element={
-          <BusinessRoute>
-            <DashboardPage />
-          </BusinessRoute>
-        } />
+              <Route path="/dashboard" element={
+                <BusinessRoute>
+                  <DashboardPage />
+                </BusinessRoute>
+              } />
         <Route path="/promotions/manage" element={
-          <BusinessRoute>
-            <PromotionsPage />
-          </BusinessRoute>
-        } />
-        <Route path="/promotions/edit/:id" element={
-          <BusinessRoute>
-            <EditPromotionPage />
-          </BusinessRoute>
-        } />
-        <Route path="/daily-menu" element={
-          <BusinessRoute>
-            <DailyMenuPage />
-          </BusinessRoute>
-        } />
-        
+                <BusinessRoute>
+                  <PromotionsPage />
+                </BusinessRoute>
+              } />
+              <Route path="/promotions/edit/:id" element={
+                <BusinessRoute>
+                  <EditPromotionPage />
+                </BusinessRoute>
+              } />
+              <Route path="/daily-menu" element={
+                <BusinessRoute>
+                  <DailyMenuPage />
+                </BusinessRoute>
+              } />
+
         {/* Ruta por defecto */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            </Routes>
       <Toaster position="top-right" />
     </div>
   );
@@ -149,8 +149,8 @@ function App() {
   console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
-      {/* TEMPORAL: Comentar todos los providers para diagnosticar */}
-      {/* <AuthProvider> */}
+      {/* TEMPORAL: Habilitar AuthProvider para probar timeouts */}
+      <AuthProvider>
       {/* <UserLocationProvider> */}
       {/* <PromotionsProvider> */}
       {/* <ClientPromotionsProvider> */}
@@ -160,7 +160,7 @@ function App() {
       {/* </ClientPromotionsProvider> */}
       {/* </PromotionsProvider> */}
       {/* </UserLocationProvider> */}
-      {/* </AuthProvider> */}
+      </AuthProvider>
     </Router>
   );
 }
