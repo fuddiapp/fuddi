@@ -122,12 +122,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Función para crear objeto de usuario
   const createUserObject = async (supabaseUser: SupabaseUser, userType: 'client' | 'business' | null): Promise<User | null> => {
-    if (!userType) return null;
+    console.log('🔍 AuthContext: createUserObject - Iniciando para usuario:', supabaseUser.id, 'tipo:', userType);
+    
+    if (!userType) {
+      console.log('❌ AuthContext: createUserObject - No hay tipo de usuario');
+      return null;
+    }
     
     let address: string | undefined;
     
     // Si es cliente, obtener la dirección desde la tabla clients
     if (userType === 'client') {
+      console.log('🔍 AuthContext: createUserObject - Obteniendo datos del cliente desde Supabase...');
       try {
         const { data: clientData, error } = await supabase
           .from('clients')
@@ -135,11 +141,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .eq('id', supabaseUser.id)
           .maybeSingle();
         
+        console.log('🔍 AuthContext: createUserObject - Datos del cliente obtenidos:', { clientData, error });
+        
         if (clientData && !error) {
           address = clientData.address;
           // Usar el nombre completo del cliente si está disponible
           const fullName = `${clientData.first_name || ''} ${clientData.last_name || ''}`.trim();
           if (fullName) {
+            console.log('✅ AuthContext: createUserObject - Usuario cliente creado con nombre completo');
             return {
               id: supabaseUser.id,
               name: fullName,
@@ -151,10 +160,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error('Error obteniendo datos del cliente:', error);
+        console.error('❌ AuthContext: createUserObject - Error obteniendo datos del cliente:', error);
       }
     }
     
+    console.log('✅ AuthContext: createUserObject - Usuario creado con datos básicos');
     return {
       id: supabaseUser.id,
       name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
