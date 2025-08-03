@@ -149,9 +149,9 @@ function App() {
   console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
-      {/* TEMPORAL: Habilitar AuthProvider con versión completamente nueva */}
+      {/* Habilitar AuthProvider y UserLocationProvider */}
       <AuthProvider>
-      {/* <UserLocationProvider> */}
+      <UserLocationProvider>
       {/* <PromotionsProvider> */}
       {/* <ClientPromotionsProvider> */}
       {/* <FollowedBusinessesProvider> */}
@@ -159,7 +159,7 @@ function App() {
       {/* </FollowedBusinessesProvider> */}
       {/* </ClientPromotionsProvider> */}
       {/* </PromotionsProvider> */}
-      {/* </UserLocationProvider> */}
+      </UserLocationProvider>
       </AuthProvider>
     </Router>
   );
