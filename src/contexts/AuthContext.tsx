@@ -206,14 +206,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
+            // TEMPORAL: Comentar las funciones maybeInsert para evitar que se cuelguen
             // Si es cliente y no existe en la tabla, insertar datos desde localStorage
-            if (userType === 'client') {
-              await maybeInsertClientData(session.user);
-            }
+            // if (userType === 'client') {
+            //   await maybeInsertClientData(session.user);
+            // }
             // Si es negocio y no existe en la tabla, insertar datos desde localStorage
-            if (userType === 'business') {
-              await maybeInsertBusinessData(session.user);
-            }
+            // if (userType === 'business') {
+            //   await maybeInsertBusinessData(session.user);
+            // }
           } else {
             console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
           }
@@ -242,14 +243,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (userData) {
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
+            // TEMPORAL: Comentar las funciones maybeInsert para evitar que se cuelguen
             // Si es cliente y no existe en la tabla, insertar datos desde localStorage
-            if (userType === 'client') {
-              await maybeInsertClientData(session.user);
-            }
+            // if (userType === 'client') {
+            //   await maybeInsertClientData(session.user);
+            // }
             // Si es negocio y no existe en la tabla, insertar datos desde localStorage
-            if (userType === 'business') {
-              await maybeInsertBusinessData(session.user);
-            }
+            // if (userType === 'business') {
+            //   await maybeInsertBusinessData(session.user);
+            // }
             // Redirigir según el tipo de usuario
             redirectUser(userType);
           } else {
