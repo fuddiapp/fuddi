@@ -47,6 +47,8 @@ interface RealPromotion {
 }
 
 const ClientHomePage: React.FC = () => {
+  console.log('🚀 ClientHomePage: Componente iniciando...');
+  
   const { user } = useAuth();
   const { userLocation } = useUserLocation();
   const navigate = useNavigate();
@@ -450,6 +452,7 @@ const ClientHomePage: React.FC = () => {
     );
   }
 
+  console.log('🎨 ClientHomePage: Renderizando componente...');
   return (
     <>
       <DesktopNavigation activeTab={activeTab} onTabChange={handleTabChange} />
