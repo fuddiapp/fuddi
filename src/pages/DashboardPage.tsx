@@ -37,6 +37,19 @@ const DashboardPage = () => {
   const { promotions, loading: loadingPromotions, deletePromotion } = usePromotions();
   const navigate = useNavigate();
   
+  // Logs de diagnóstico detallados
+  React.useEffect(() => {
+    console.log('🔍 DashboardPage: Componente montado');
+    console.log('👤 DashboardPage: Usuario:', user);
+    console.log('📊 DashboardPage: Estado de promociones:', { promotions, loadingPromotions });
+    console.log('🔑 DashboardPage: Variables de entorno:');
+    console.log('  - VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('  - VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ No configurada');
+    console.log('  - VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
+    console.log('  - NODE_ENV:', import.meta.env.NODE_ENV);
+    console.log('  - MODE:', import.meta.env.MODE);
+  }, [user, promotions, loadingPromotions]);
+
   // Verificar variables de entorno
   React.useEffect(() => {
     console.log('🔍 Dashboard: Verificando variables de entorno...');
