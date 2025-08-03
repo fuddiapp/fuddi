@@ -41,6 +41,7 @@ console.log('VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KE
 
 // Componente para proteger rutas públicas (landing page, login, register)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  console.log('🔒 App.tsx: PublicRoute renderizando...');
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
@@ -67,6 +68,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function AppRoutes() {
+  console.log('🔄 App.tsx: AppRoutes renderizando...');
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
@@ -143,6 +145,7 @@ function AppRoutes() {
 }
 
 function App() {
+  console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
       <AuthProvider>
