@@ -149,17 +149,17 @@ function App() {
   console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
-      {/* TEMPORAL: Comentar AuthProvider para diagnosticar */}
+      {/* TEMPORAL: Comentar todos los providers para diagnosticar */}
       {/* <AuthProvider> */}
-        <UserLocationProvider>
-          <PromotionsProvider>
-            <ClientPromotionsProvider>
-              <FollowedBusinessesProvider>
-                <AppRoutes />
-              </FollowedBusinessesProvider>
-            </ClientPromotionsProvider>
-          </PromotionsProvider>
-        </UserLocationProvider>
+      {/* <UserLocationProvider> */}
+        <PromotionsProvider>
+          <ClientPromotionsProvider>
+            <FollowedBusinessesProvider>
+              <AppRoutes />
+            </FollowedBusinessesProvider>
+          </ClientPromotionsProvider>
+        </PromotionsProvider>
+      {/* </UserLocationProvider> */}
       {/* </AuthProvider> */}
     </Router>
   );
