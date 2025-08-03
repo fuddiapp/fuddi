@@ -269,11 +269,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Función para insertar datos de cliente tras el primer login si no existe en la tabla
   const maybeInsertClientData = async (supabaseUser: SupabaseUser) => {
     try {
-      const { data: client, error } = await supabase
+      console.log('🔍 AuthContext: maybeInsertClientData - Iniciando...');
+      
+      // TEMPORAL: Agregar timeout para evitar que se cuelgue
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout en maybeInsertClientData')), 3000);
+      });
+      
+      const supabasePromise = supabase
         .from('clients')
         .select('id')
         .eq('id', supabaseUser.id)
         .maybeSingle();
+      
+      const { data: client, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
+      
+      console.log('🔍 AuthContext: maybeInsertClientData - Consulta completada:', { client, error });
+      
       if (!client && !error) {
         const regData = localStorage.getItem('fuddi-client-registration');
         if (regData) {
@@ -294,20 +306,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       }
-    } catch (e) {
-      // Silenciar error
+    } catch (error) {
+      console.error('❌ AuthContext: maybeInsertClientData - Error:', error);
+      console.log('⚠️ AuthContext: maybeInsertClientData - Continuando sin insertar datos');
     }
   };
 
   // Función para insertar datos de negocio tras el primer login si no existe en la tabla
   const maybeInsertBusinessData = async (supabaseUser: SupabaseUser) => {
     try {
-      console.log('🔍 Verificando si existe negocio para usuario:', supabaseUser.id);
-      const { data: business, error } = await supabase
+      console.log('🔍 AuthContext: maybeInsertBusinessData - Iniciando...');
+      
+      // TEMPORAL: Agregar timeout para evitar que se cuelgue
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout en maybeInsertBusinessData')), 3000);
+      });
+      
+      const supabasePromise = supabase
         .from('businesses')
         .select('id')
         .eq('id', supabaseUser.id)
         .maybeSingle();
+      
+      const { data: business, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
+      
+      console.log('🔍 AuthContext: maybeInsertBusinessData - Consulta completada:', { business, error });
       
       if (error) {
         console.error('❌ Error verificando negocio:', error);
@@ -391,8 +414,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         console.log('✅ Negocio ya existe en la base de datos');
       }
-    } catch (e) {
-      console.error('❌ Error en maybeInsertBusinessData:', e);
+    } catch (error) {
+      console.error('❌ AuthContext: maybeInsertBusinessData - Error:', error);
+      console.log('⚠️ AuthContext: maybeInsertBusinessData - Continuando sin insertar datos');
     }
   };
 
