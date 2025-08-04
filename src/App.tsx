@@ -28,6 +28,8 @@ import BusinessesPage from '@/pages/BusinessesPage';
 import BusinessDetailPage from '@/pages/BusinessDetailPage';
 import FollowedBusinessesPage from '@/pages/FollowedBusinessesPage';
 import DailyMenuPage from '@/pages/DailyMenuPage';
+import ProductsPage from '@/pages/ProductsPage';
+import QRCodePage from '@/pages/QRCodePage';
 import SettingsPage from '@/pages/SettingsPage';
 import ProfilePage from '@/pages/Profile';
 import AnalyticsPage from '@/pages/AnalyticsPage';
@@ -149,6 +151,16 @@ function AppRoutes() {
               <Route path="/daily-menu" element={
                 <BusinessRoute>
                   <DailyMenuPage />
+                </BusinessRoute>
+              } />
+              <Route path="/products" element={
+                <BusinessRoute>
+                  <ProductsPage />
+                </BusinessRoute>
+              } />
+              <Route path="/qr-codes" element={
+                <BusinessRoute>
+                  <QRCodePage />
                 </BusinessRoute>
               } />
 
