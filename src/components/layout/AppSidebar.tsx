@@ -51,7 +51,7 @@ const AppSidebar = () => {
     },
     {
       title: "Promociones",
-      url: "/promotions", 
+      url: "/promotions/manage", 
       icon: Tag,
     },
     {

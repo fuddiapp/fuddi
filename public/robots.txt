@@ -1,14 +1,14 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://fuddi.cl/sitemap.xml
+
+# Disallow admin and private routes
+Disallow: /dashboard
+Disallow: /analytics
+Disallow: /promotions/manage
+Disallow: /promotions/edit/
+Disallow: /daily-menu
+Disallow: /settings
+Disallow: /profile

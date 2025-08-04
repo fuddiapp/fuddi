@@ -23,6 +23,7 @@ import PromotionsPage from '@/pages/PromotionsPage';
 import AllPromotionsPage from '@/pages/AllPromotionsPage';
 import PromotionDetailPage from '@/pages/PromotionDetailPage';
 import EditPromotionPage from '@/pages/EditPromotionPage';
+import NewPromotionPage from '@/pages/NewPromotionPage';
 import BusinessesPage from '@/pages/BusinessesPage';
 import BusinessDetailPage from '@/pages/BusinessDetailPage';
 import FollowedBusinessesPage from '@/pages/FollowedBusinessesPage';
@@ -133,6 +134,11 @@ function AppRoutes() {
         <Route path="/promotions/manage" element={
                 <BusinessRoute>
                   <PromotionsPage />
+                </BusinessRoute>
+              } />
+              <Route path="/promotions/new" element={
+                <BusinessRoute>
+                  <NewPromotionPage />
                 </BusinessRoute>
               } />
               <Route path="/promotions/edit/:id" element={
