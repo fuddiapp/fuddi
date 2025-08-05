@@ -44,6 +44,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Función para manejar la inserción de negocios después de la verificación
+  const handleBusinessRegistration = async (supabaseUser: any) => {
+    try {
+      // Solo procesar si es un negocio
+      if (supabaseUser.user_metadata?.type === 'business') {
+        // Obtener datos de user_metadata primero
+        const metadata = supabaseUser.user_metadata || {};
+        let businessData = {
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          business_name: metadata.business_name || 'Negocio',
+          category: metadata.category || '',
+          description: metadata.description || '',
+          address: metadata.address || '',
+          opening_time: metadata.opening_time || '09:00',
+          closing_time: metadata.closing_time || '18:00',
+          location_lat: metadata.location_lat || null,
+          location_lng: metadata.location_lng || null,
+          logo_url: '',
+        };
+        
+        // Verificar si hay datos de registro en localStorage como respaldo
+        const businessRegistrationData = localStorage.getItem('fuddi-business-registration');
+        if (businessRegistrationData) {
+          try {
+            const registrationData = JSON.parse(businessRegistrationData);
+            // Usar datos de localStorage solo si no están en metadata
+            businessData = {
+              ...businessData,
+              business_name: metadata.business_name || registrationData.business_name || businessData.business_name,
+              category: metadata.category || registrationData.category || businessData.category,
+              description: metadata.description || registrationData.description || businessData.description,
+              address: metadata.address || registrationData.address || businessData.address,
+              opening_time: metadata.opening_time || registrationData.opening_time || businessData.opening_time,
+              closing_time: metadata.closing_time || registrationData.closing_time || businessData.closing_time,
+              location_lat: metadata.location_lat || registrationData.location_lat || businessData.location_lat,
+              location_lng: metadata.location_lng || registrationData.location_lng || businessData.location_lng,
+            };
+            localStorage.removeItem('fuddi-business-registration');
+          } catch (error) {
+            console.error('❌ AuthContext: Error al parsear datos de localStorage:', error);
+          }
+        }
+        
+        // Insertar negocio en la tabla businesses (ignorar errores de duplicado)
+        const { error: insertError } = await supabase.from('businesses').insert(businessData);
+        
+        if (insertError && !insertError.message.includes('duplicate')) {
+          console.error('❌ AuthContext: Error al insertar negocio:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('❌ AuthContext: Error en handleBusinessRegistration:', error);
+    }
+  };
+
   // Función para manejar la inserción de clientes después de la verificación
   const handleClientRegistration = async (supabaseUser: any) => {
     try {
@@ -116,9 +172,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           localStorage.setItem('fuddi-user', JSON.stringify(userData));
         }
         
-        // Manejar registro de cliente de forma asíncrona (no bloquear)
+        // Manejar registro de cliente y negocio de forma asíncrona (no bloquear)
         handleClientRegistration(session.user).catch(error => {
           console.error('Error en handleClientRegistration:', error);
+        });
+        
+        handleBusinessRegistration(session.user).catch(error => {
+          console.error('Error en handleBusinessRegistration:', error);
         });
       }
     } catch (error) {
@@ -142,9 +202,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
           }
           
-          // Manejar registro de cliente de forma asíncrona (no bloquear)
+          // Manejar registro de cliente y negocio de forma asíncrona (no bloquear)
           handleClientRegistration(session.user).catch(error => {
             console.error('Error en handleClientRegistration:', error);
+          });
+          handleBusinessRegistration(session.user).catch(error => {
+            console.error('Error en handleBusinessRegistration:', error);
           });
         } else if (event === 'SIGNED_OUT') {
           setUser(null);

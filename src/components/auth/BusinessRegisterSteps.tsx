@@ -143,7 +143,19 @@ const BusinessRegisterSteps = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { type: 'business' } }
+        options: { 
+          data: { 
+            type: 'business',
+            business_name: businessName,
+            category: selectedCategory ? selectedCategory.label : category,
+            description,
+            address,
+            opening_time: openingTime,
+            closing_time: closingTime,
+            location_lat: location?.lat || null,
+            location_lng: location?.lng || null,
+          } 
+        }
       });
       if (authError || !authData.user) {
         setIsLoading(false);
