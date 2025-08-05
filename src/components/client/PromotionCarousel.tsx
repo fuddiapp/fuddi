@@ -43,7 +43,7 @@ const PromotionCarousel: React.FC<PromotionCarouselProps> = ({
           }`}
           onClick={() => {
             if (title.includes('Explora todas las promociones')) {
-              navigate('/all-promotions');
+              navigate('/promotions');
             }
           }}
         >
