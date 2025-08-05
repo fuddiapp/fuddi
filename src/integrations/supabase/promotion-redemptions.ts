@@ -183,11 +183,15 @@ export const getBusinessRedemptions = async (businessId: string): Promise<Promot
 // Obtener estadísticas de canjes para un negocio
 export const getBusinessRedemptionStats = async (businessId: string) => {
   try {
+    console.log('🔍 getBusinessRedemptionStats: Iniciando para businessId:', businessId);
+    
     // Obtener total de canjes
     const { data: totalRedemptions, error: totalError } = await (supabase as any)
       .from('promotion_redemptions')
       .select('redemption_amount')
       .eq('business_id', businessId);
+
+    console.log('📊 getBusinessRedemptionStats: Total redemptions query result:', { data: totalRedemptions, error: totalError });
 
     if (totalError) {
       console.error('Error fetching total redemptions:', totalError);
@@ -196,11 +200,15 @@ export const getBusinessRedemptionStats = async (businessId: string) => {
 
     // Obtener canjes de hoy
     const today = new Date().toISOString().split('T')[0];
+    console.log('📅 getBusinessRedemptionStats: Fecha de hoy:', today);
+    
     const { data: todayRedemptions, error: todayError } = await (supabase as any)
       .from('promotion_redemptions')
       .select('redemption_amount')
       .eq('business_id', businessId)
       .gte('redemption_date', today);
+
+    console.log('📊 getBusinessRedemptionStats: Today redemptions query result:', { data: todayRedemptions, error: todayError });
 
     if (todayError) {
       console.error('Error fetching today redemptions:', todayError);
@@ -210,14 +218,17 @@ export const getBusinessRedemptionStats = async (businessId: string) => {
     const totalAmount = totalRedemptions?.reduce((sum: number, redemption: any) => sum + redemption.redemption_amount, 0) || 0;
     const todayAmount = todayRedemptions?.reduce((sum: number, redemption: any) => sum + redemption.redemption_amount, 0) || 0;
 
-    return {
+    const stats = {
       totalRedemptions: totalRedemptions?.length || 0,
       totalAmount,
       todayRedemptions: todayRedemptions?.length || 0,
       todayAmount,
     };
+
+    console.log('✅ getBusinessRedemptionStats: Estadísticas calculadas:', stats);
+    return stats;
   } catch (error) {
-    console.error('Error in getBusinessRedemptionStats:', error);
+    console.error('❌ Error in getBusinessRedemptionStats:', error);
     throw error;
   }
 };
