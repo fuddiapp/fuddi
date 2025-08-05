@@ -59,6 +59,7 @@ const PromotionDetailPage: React.FC = () => {
   const [redemptionLoading, setRedemptionLoading] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [hasRedeemedToday, setHasRedeemedToday] = useState(false);
 
   useEffect(() => {
     const loadPromotionDetails = async () => {
@@ -107,6 +108,22 @@ const PromotionDetailPage: React.FC = () => {
 
     loadPromotionDetails();
   }, [id]);
+
+  // Verificar si el usuario ya canjeó esta promoción hoy
+  useEffect(() => {
+    const checkTodayRedemption = async () => {
+      if (!user || !promotion) return;
+      
+      try {
+        const hasRedeemed = await checkTodayRedemption(promotion.id, user.id);
+        setHasRedeemedToday(hasRedeemed);
+      } catch (error) {
+        console.error('Error checking today redemption:', error);
+      }
+    };
+
+    checkTodayRedemption();
+  }, [user, promotion]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -420,15 +437,21 @@ const PromotionDetailPage: React.FC = () => {
                 onClick={handleRedeemClick}
                 size="lg"
                 className="w-full h-14 text-lg font-semibold bg-fuddi-purple hover:bg-fuddi-purple/90"
-                disabled={!isBusinessOpen(business.opening_time, business.closing_time)}
+                disabled={!isBusinessOpen(business.opening_time, business.closing_time) || hasRedeemedToday}
               >
                 <QrCode className="h-5 w-5 mr-2" />
-                Canjear Promoción
+                {hasRedeemedToday ? 'Promoción Canjeada' : 'Canjear Promoción'}
               </Button>
               
               {!isBusinessOpen(business.opening_time, business.closing_time) && (
                 <p className="text-sm text-gray-500 text-center mt-2">
                   El negocio está cerrado. Solo puedes canjear promociones cuando esté abierto.
+                </p>
+              )}
+              
+              {hasRedeemedToday && (
+                <p className="text-sm text-gray-500 text-center mt-2">
+                  Ya canjeaste esta promoción hoy. Puedes volver a canjearla mañana.
                 </p>
               )}
             </div>
