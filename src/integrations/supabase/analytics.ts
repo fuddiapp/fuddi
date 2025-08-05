@@ -82,7 +82,7 @@ export const getAnalyticsData = async (businessId: string): Promise<AnalyticsDat
     // Obtener canjes del negocio específico
     const { data: redemptionsData, error: redemptionsError } = await (supabase as any)
       .from('promotion_redemptions')
-      .select('id, promotion_id, amount, created_at')
+      .select('id, promotion_id, amount, created_at, business_id')
       .eq('business_id', businessId)
       .gte('created_at', new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString());
 
@@ -92,6 +92,13 @@ export const getAnalyticsData = async (businessId: string): Promise<AnalyticsDat
     }
 
     console.log('✅ Canjes encontrados:', redemptionsData?.length || 0);
+    console.log('🔍 Detalles de canjes:', redemptionsData?.map((r: any) => ({
+      id: r.id,
+      business_id: r.business_id,
+      promotion_id: r.promotion_id,
+      amount: r.amount,
+      created_at: r.created_at
+    })) || []);
 
     // Crear mapa de promociones para facilitar el acceso
     const promotionsMap = new Map(businessPromotions?.map(p => [p.id, p]) || []);
