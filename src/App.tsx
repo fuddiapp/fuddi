@@ -37,16 +37,8 @@ import AnalyticsPage from '@/pages/AnalyticsPage';
 // Componentes de layout
 import BusinessRoute from '@/components/auth/BusinessRoute';
 
-// Log de diagnóstico
-console.log('🚀 App.tsx: Aplicación iniciando...');
-console.log('🔍 App.tsx: Verificando variables de entorno básicas...');
-console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ No configurada');
-console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ No configurada');
-console.log('VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
-
 // Componente para proteger rutas públicas (landing page, login, register)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  console.log('🔒 App.tsx: PublicRoute renderizando...');
   // TEMPORAL: Habilitar useAuth con versión completamente nueva
   const { user, isLoading } = useAuth();
   
@@ -74,7 +66,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function AppRoutes() {
-  console.log('🔄 App.tsx: AppRoutes renderizando...');
   return (
     <div className="min-h-screen bg-gray-50">
             <Routes>
@@ -173,7 +164,6 @@ function AppRoutes() {
 }
 
 function App() {
-  console.log('🚀 App.tsx: Componente App renderizando...');
   return (
     <Router>
       {/* Habilitar TODOS los Context Providers */}

@@ -47,23 +47,10 @@ interface RealPromotion {
 }
 
 const ClientHomePage: React.FC = () => {
-  console.log('🚀 ClientHomePage: Componente iniciando...');
-  
   const { user } = useAuth();
   const { userLocation } = useUserLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Logs de diagnóstico
-  React.useEffect(() => {
-    console.log('🔍 ClientHomePage: Componente montado');
-    console.log('👤 ClientHomePage: Usuario:', user);
-    console.log('📍 ClientHomePage: Ubicación:', userLocation);
-    console.log('🔧 ClientHomePage: Variables de entorno:');
-    console.log('  - VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ No configurada');
-    console.log('  - VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ No configurada');
-    console.log('  - VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
-  }, [user, userLocation]);
   
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,22 +68,17 @@ const ClientHomePage: React.FC = () => {
   // Función para cargar promociones
   const loadPromotions = async () => {
     try {
-      console.log('🔍 ClientHomePage: Iniciando carga de promociones...');
       setLoading(true);
       
       // Obtener promociones activas
       const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-      console.log('📅 ClientHomePage: Fecha actual para filtro:', today);
       
-      console.log('🔍 ClientHomePage: Consultando tabla promotions...');
       const { data: promotionsData, error: promotionsError } = await supabase
         .from('promotions')
         .select('*')
         .lte('start_date', today) // La promoción ya comenzó
         .or(`end_date.is.null,end_date.gte.${today}`) // No ha terminado o es indefinida
         .order('created_at', { ascending: false });
-
-      console.log('📊 ClientHomePage: Resultado de consulta promotions:', { data: promotionsData, error: promotionsError });
 
       if (promotionsError) {
         console.error('❌ ClientHomePage: Error cargando promociones:', promotionsError);
@@ -108,13 +90,10 @@ const ClientHomePage: React.FC = () => {
         return;
       }
 
-      console.log('🔍 ClientHomePage: Consultando tabla businesses...');
       // Obtener todos los negocios para relacionar con las promociones
       const { data: businessesData, error: businessesError } = await supabase
         .from('businesses')
         .select('*');
-
-      console.log('📊 ClientHomePage: Resultado de consulta businesses:', { data: businessesData, error: businessesError });
 
       if (businessesError) {
         console.error('❌ ClientHomePage: Error cargando negocios:', businessesError);
@@ -126,7 +105,6 @@ const ClientHomePage: React.FC = () => {
         return;
       }
 
-      console.log('🔗 ClientHomePage: Combinando promociones con negocios...');
       // Combinar promociones con información de negocios
       const promotionsWithBusinesses = promotionsData?.map(promotion => {
         const business = businessesData?.find(b => b.id === promotion.business_id);
@@ -143,7 +121,6 @@ const ClientHomePage: React.FC = () => {
         };
       }) || [];
 
-      console.log('✅ ClientHomePage: Promociones combinadas:', promotionsWithBusinesses);
       setPromotions(promotionsWithBusinesses);
     } catch (error) {
       console.error('❌ ClientHomePage: Error inesperado:', error);
@@ -153,7 +130,6 @@ const ClientHomePage: React.FC = () => {
         variant: "destructive",
       });
     } finally {
-      console.log('🏁 ClientHomePage: Finalizando carga de promociones');
       setLoading(false);
     }
   };
@@ -452,7 +428,6 @@ const ClientHomePage: React.FC = () => {
     );
   }
 
-  console.log('🎨 ClientHomePage: Renderizando componente...');
   return (
     <>
       <DesktopNavigation activeTab={activeTab} onTabChange={handleTabChange} />

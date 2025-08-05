@@ -46,16 +46,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Función para manejar la inserción de clientes después de la verificación
   const handleClientRegistration = async (supabaseUser: any) => {
-    console.log('🔍 AuthContext: handleClientRegistration - Iniciando...');
-    console.log('🔍 AuthContext: handleClientRegistration - Usuario:', supabaseUser.id);
-    console.log('🔍 AuthContext: handleClientRegistration - Tipo:', supabaseUser.user_metadata?.type);
-    console.log('🔍 AuthContext: handleClientRegistration - Metadata:', supabaseUser.user_metadata);
-    
     try {
       // Solo procesar si es un cliente
       if (supabaseUser.user_metadata?.type === 'client') {
-        console.log('🔍 AuthContext: handleClientRegistration - Verificando si cliente existe en tabla...');
-        
         // Verificar si el cliente ya existe en la tabla
         const { data: existingClient, error: checkError } = await supabase
           .from('clients')
@@ -70,8 +63,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Si el cliente no existe, insertarlo
         if (!existingClient) {
-          console.log('🔍 AuthContext: Cliente no existe en tabla, insertando...');
-          
           // Obtener datos de user_metadata primero
           const metadata = supabaseUser.user_metadata || {};
           let clientData = {
@@ -94,14 +85,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 last_name: metadata.lastName || registrationData.lastName || clientData.last_name,
                 address: metadata.address || registrationData.address || clientData.address,
               };
-              console.log('🔍 AuthContext: Usando datos de localStorage como respaldo:', registrationData);
               localStorage.removeItem('fuddi-client-registration');
             } catch (error) {
               console.error('❌ AuthContext: Error al parsear datos de localStorage:', error);
             }
           }
-          
-          console.log('🔍 AuthContext: Datos finales del cliente:', clientData);
           
           // Insertar cliente en la tabla clients
           const { error: insertError } = await supabase.from('clients').insert(clientData);
@@ -110,13 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.error('❌ AuthContext: Error al insertar cliente:', insertError);
             throw insertError;
           }
-          
-          console.log('✅ AuthContext: Cliente insertado exitosamente en la tabla clients');
-        } else {
-          console.log('✅ AuthContext: Cliente ya existe en la tabla');
         }
-      } else {
-        console.log('🔍 AuthContext: handleClientRegistration - No es un cliente, saltando inserción');
       }
     } catch (error) {
       console.error('❌ AuthContext: Error en handleClientRegistration:', error);
@@ -125,13 +107,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Función simplificada para crear objeto de usuario
   const createUserObject = (supabaseUser: any): User | null => {
-    console.log('🔍 AuthContext: createUserObject - Iniciando para usuario:', supabaseUser.id);
-    
     // Usar user_metadata para determinar el tipo
     const userType = supabaseUser.user_metadata?.type || 'client';
-    console.log('🔍 AuthContext: user_metadata.type:', userType);
     
-    console.log('✅ AuthContext: createUserObject - Usuario creado con datos básicos');
     return {
       id: supabaseUser.id,
       name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
@@ -143,34 +121,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Función simplificada para obtener sesión inicial
   const getInitialSession = async () => {
-    console.log('🚀 AuthContext: getInitialSession - Iniciando...');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('🔍 AuthContext: getInitialSession - Sesión obtenida:', !!session);
       
       if (session?.user) {
-        console.log('🔍 AuthContext: getInitialSession - Usuario encontrado:', session.user.id);
-        
         // Manejar registro de cliente si es necesario
         await handleClientRegistration(session.user);
         
         const userData = createUserObject(session.user);
-        console.log('🔍 AuthContext: getInitialSession - Objeto de usuario creado:', !!userData);
         
         if (userData) {
-          console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
           setUser(userData);
           localStorage.setItem('fuddi-user', JSON.stringify(userData));
-        } else {
-          console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
         }
-      } else {
-        console.log('🔍 AuthContext: getInitialSession - No hay sesión activa');
       }
     } catch (error) {
       console.error('❌ AuthContext: getInitialSession - Error:', error);
     } finally {
-      console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
       setIsLoading(false);
     }
   };
@@ -182,7 +149,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔍 AuthContext: onAuthStateChange - Evento:', event);
         
         if (event === 'SIGNED_IN' && session?.user) {
           // Manejar registro de cliente si es necesario
@@ -192,12 +158,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (userData) {
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
-            console.log('✅ AuthContext: Usuario autenticado:', userData.type);
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           localStorage.removeItem('fuddi-user');
-          console.log('✅ AuthContext: Usuario desconectado');
         }
       }
     );
