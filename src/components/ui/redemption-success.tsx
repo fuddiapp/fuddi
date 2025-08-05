@@ -64,8 +64,11 @@ const RedemptionSuccess: React.FC<RedemptionSuccessProps> = ({
                 MUESTRA EN CAJA
               </p>
             </div>
-            <p className="text-xs text-blue-700 text-center">
+            <p className="text-xs text-blue-700 text-center mb-2">
               Para verificar que tu promoción fue canjeada correctamente
+            </p>
+            <p className="text-xs text-blue-600 text-center font-medium">
+              🕐 Canjeado el {new Date().toLocaleDateString('es-CL')} a las {new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
 

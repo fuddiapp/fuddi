@@ -454,6 +454,19 @@ const PromotionDetailPage: React.FC = () => {
                   Ya canjeaste esta promoción hoy. Puedes volver a canjearla mañana.
                 </p>
               )}
+              
+              {/* Instrucciones de canje */}
+              {!hasRedeemedToday && isBusinessOpen(business.opening_time, business.closing_time) && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">📋 ¿Cómo canjear?</h3>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>🔘 Presiona "Canjear Promoción"</p>
+                    <p>📱 Ingresa el código de 4 dígitos (en caja del local)</p>
+                    <p>✅ ¡Listo! Muestra el código al cajero</p>
+                    <p>🎯 Una vez por día por promoción</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
