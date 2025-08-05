@@ -51,37 +51,67 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('🔍 AuthContext: handleClientRegistration - Tipo:', supabaseUser.user_metadata?.type);
     
     try {
-      // Verificar si hay datos de registro de cliente en localStorage
-      const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
-      console.log('🔍 AuthContext: handleClientRegistration - Datos en localStorage:', !!clientRegistrationData);
-      
-      if (clientRegistrationData && supabaseUser.user_metadata?.type === 'client') {
-        const registrationData = JSON.parse(clientRegistrationData);
+      // Solo procesar si es un cliente
+      if (supabaseUser.user_metadata?.type === 'client') {
+        console.log('🔍 AuthContext: handleClientRegistration - Verificando si cliente existe en tabla...');
         
-        console.log('🔍 AuthContext: Procesando registro de cliente:', registrationData);
+        // Verificar si el cliente ya existe en la tabla
+        const { data: existingClient, error: checkError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', supabaseUser.id)
+          .single();
         
-        // Insertar cliente en la tabla clients
-        const { error: insertError } = await supabase.from('clients').insert({
-          id: supabaseUser.id,
-          email: supabaseUser.email,
-          first_name: registrationData.firstName,
-          last_name: registrationData.lastName,
-          address: registrationData.address,
-        });
-        
-        if (insertError) {
-          console.error('❌ AuthContext: Error al insertar cliente:', insertError);
-          throw insertError;
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('❌ AuthContext: Error al verificar cliente existente:', checkError);
+          return;
         }
         
-        console.log('✅ AuthContext: Cliente insertado exitosamente en la tabla clients');
-        
-        // Limpiar datos de localStorage
-        localStorage.removeItem('fuddi-client-registration');
+        // Si el cliente no existe, insertarlo
+        if (!existingClient) {
+          console.log('🔍 AuthContext: Cliente no existe en tabla, insertando...');
+          
+          // Verificar si hay datos de registro en localStorage
+          const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
+          let clientData = {
+            id: supabaseUser.id,
+            email: supabaseUser.email,
+            first_name: supabaseUser.user_metadata?.given_name || supabaseUser.user_metadata?.name || 'Cliente',
+            last_name: supabaseUser.user_metadata?.family_name || '',
+            address: '',
+          };
+          
+          // Si hay datos de registro, usarlos
+          if (clientRegistrationData) {
+            try {
+              const registrationData = JSON.parse(clientRegistrationData);
+              clientData = {
+                ...clientData,
+                first_name: registrationData.firstName || clientData.first_name,
+                last_name: registrationData.lastName || clientData.last_name,
+                address: registrationData.address || '',
+              };
+              console.log('🔍 AuthContext: Usando datos de localStorage:', registrationData);
+              localStorage.removeItem('fuddi-client-registration');
+            } catch (error) {
+              console.error('❌ AuthContext: Error al parsear datos de localStorage:', error);
+            }
+          }
+          
+          // Insertar cliente en la tabla clients
+          const { error: insertError } = await supabase.from('clients').insert(clientData);
+          
+          if (insertError) {
+            console.error('❌ AuthContext: Error al insertar cliente:', insertError);
+            throw insertError;
+          }
+          
+          console.log('✅ AuthContext: Cliente insertado exitosamente en la tabla clients');
+        } else {
+          console.log('✅ AuthContext: Cliente ya existe en la tabla');
+        }
       } else {
-        console.log('🔍 AuthContext: handleClientRegistration - No se cumplen las condiciones para insertar cliente');
-        console.log('🔍 AuthContext: handleClientRegistration - clientRegistrationData existe:', !!clientRegistrationData);
-        console.log('🔍 AuthContext: handleClientRegistration - user_metadata.type es client:', supabaseUser.user_metadata?.type === 'client');
+        console.log('🔍 AuthContext: handleClientRegistration - No es un cliente, saltando inserción');
       }
     } catch (error) {
       console.error('❌ AuthContext: Error en handleClientRegistration:', error);
