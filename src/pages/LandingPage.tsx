@@ -27,7 +27,7 @@ const LandingPage = () => (
       <div className="max-w-2xl mx-auto z-10">
         <span className="text-5xl md:text-6xl font-lobster text-fuddi-purple mb-2 block drop-shadow-glow">Fuddi</span>
         <h1 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900 leading-tight font-sans">
-          Descubre descuentos y menús del día cerca de ti
+          Descubre descuentos y ofertas de comida cerca de ti
         </h1>
         <p className="text-lg md:text-xl text-gray-700 mb-8 font-sans">
           Ahorra en tus comidas favoritas, encuentra promociones exclusivas y vive la experiencia Fuddi.
