@@ -111,7 +111,7 @@ const PromotionDetailPage: React.FC = () => {
 
   // Verificar si el usuario ya canjeó esta promoción hoy
   useEffect(() => {
-    const checkTodayRedemption = async () => {
+    const verifyTodayRedemption = async () => {
       if (!user || !promotion) return;
       
       try {
@@ -122,7 +122,7 @@ const PromotionDetailPage: React.FC = () => {
       }
     };
 
-    checkTodayRedemption();
+    verifyTodayRedemption();
   }, [user, promotion]);
 
   useEffect(() => {
