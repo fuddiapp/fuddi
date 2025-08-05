@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('🔍 AuthContext: handleClientRegistration - Iniciando...');
     console.log('🔍 AuthContext: handleClientRegistration - Usuario:', supabaseUser.id);
     console.log('🔍 AuthContext: handleClientRegistration - Tipo:', supabaseUser.user_metadata?.type);
+    console.log('🔍 AuthContext: handleClientRegistration - Metadata:', supabaseUser.user_metadata);
     
     try {
       // Solo procesar si es un cliente
@@ -71,32 +72,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!existingClient) {
           console.log('🔍 AuthContext: Cliente no existe en tabla, insertando...');
           
-          // Verificar si hay datos de registro en localStorage
-          const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
+          // Obtener datos de user_metadata primero
+          const metadata = supabaseUser.user_metadata || {};
           let clientData = {
             id: supabaseUser.id,
             email: supabaseUser.email,
-            first_name: supabaseUser.user_metadata?.given_name || supabaseUser.user_metadata?.name || 'Cliente',
-            last_name: supabaseUser.user_metadata?.family_name || '',
-            address: '',
+            first_name: metadata.firstName || metadata.given_name || 'Cliente',
+            last_name: metadata.lastName || metadata.family_name || '',
+            address: metadata.address || '',
           };
           
-          // Si hay datos de registro, usarlos
+          // Verificar si hay datos de registro en localStorage como respaldo
+          const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
           if (clientRegistrationData) {
             try {
               const registrationData = JSON.parse(clientRegistrationData);
+              // Usar datos de localStorage solo si no están en metadata
               clientData = {
                 ...clientData,
-                first_name: registrationData.firstName || clientData.first_name,
-                last_name: registrationData.lastName || clientData.last_name,
-                address: registrationData.address || '',
+                first_name: metadata.firstName || registrationData.firstName || clientData.first_name,
+                last_name: metadata.lastName || registrationData.lastName || clientData.last_name,
+                address: metadata.address || registrationData.address || clientData.address,
               };
-              console.log('🔍 AuthContext: Usando datos de localStorage:', registrationData);
+              console.log('🔍 AuthContext: Usando datos de localStorage como respaldo:', registrationData);
               localStorage.removeItem('fuddi-client-registration');
             } catch (error) {
               console.error('❌ AuthContext: Error al parsear datos de localStorage:', error);
             }
           }
+          
+          console.log('🔍 AuthContext: Datos finales del cliente:', clientData);
           
           // Insertar cliente en la tabla clients
           const { error: insertError } = await supabase.from('clients').insert(clientData);

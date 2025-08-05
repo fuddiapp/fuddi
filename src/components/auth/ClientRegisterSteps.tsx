@@ -144,14 +144,21 @@ const ClientRegisterSteps = () => {
       const { data, error } = await supabase.auth.signUp({
         email: step1Data.email,
         password: step1Data.password,
-        options: { data: { type: 'client' } }
+        options: { 
+          data: { 
+            type: 'client',
+            firstName: firstName,
+            lastName: lastName,
+            address: address
+          } 
+        }
       });
       if (error || !data.user) {
         setErrors({ email: 'Error al crear usuario' });
         setIsLoading(false);
         return;
       }
-      // Guardar datos en localStorage para insertarlos tras el primer login
+      // Guardar datos en localStorage como respaldo
       localStorage.setItem('fuddi-client-registration', JSON.stringify({
         email: step1Data.email,
         firstName,
