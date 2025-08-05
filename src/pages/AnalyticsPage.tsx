@@ -84,14 +84,15 @@ const AnalyticsPage: React.FC = () => {
 
       console.log('📅 Analytics: Rango de fechas:', { startDate, endDate });
 
-      // 1. Obtener canjes del negocio
-      const { data: redemptions, error: redemptionsError } = await supabase
+      // 1. Obtener canjes del negocio específico
+      const { data: redemptions, error: redemptionsError } = await (supabase as any)
         .from('promotion_redemptions')
         .select(`
           id,
           created_at,
           promotion_id
         `)
+        .eq('business_id', user.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
