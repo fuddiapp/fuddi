@@ -128,6 +128,9 @@ const BusinessRegisterSteps = () => {
     setIsLoading(true);
     setErrors({});
     try {
+      // Obtener la categoría seleccionada una sola vez
+      const selectedCategory = businessCategories.find(cat => cat.value === category);
+      
       // 1. Verificar si el email ya existe
       const { data: existingBusiness, error: existingError } = await supabase
         .from('businesses')
@@ -177,7 +180,6 @@ const BusinessRegisterSteps = () => {
           }
         }
         // Guardar negocio en businesses
-        const selectedCategory = businessCategories.find(cat => cat.value === category);
         const businessData = {
           id: userId,
           email,
@@ -198,7 +200,6 @@ const BusinessRegisterSteps = () => {
       }
       // --- FLUJO MANUAL: Mostrar pantalla de verificación ---
       // Guardar datos en localStorage para insertarlos tras el primer login
-      const selectedCategory = businessCategories.find(cat => cat.value === category);
       
       // Convertir logo a base64 si existe para guardarlo en localStorage
       let logoBase64 = null;
