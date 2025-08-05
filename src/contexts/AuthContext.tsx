@@ -44,6 +44,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Función para manejar la inserción de clientes después de la verificación
+  const handleClientRegistration = async (supabaseUser: any) => {
+    try {
+      // Verificar si hay datos de registro de cliente en localStorage
+      const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
+      
+      if (clientRegistrationData && supabaseUser.user_metadata?.type === 'client') {
+        const registrationData = JSON.parse(clientRegistrationData);
+        
+        console.log('🔍 AuthContext: Procesando registro de cliente:', registrationData);
+        
+        // Insertar cliente en la tabla clients
+        const { error: insertError } = await supabase.from('clients').insert({
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          first_name: registrationData.firstName,
+          last_name: registrationData.lastName,
+          address: registrationData.address,
+        });
+        
+        if (insertError) {
+          console.error('❌ AuthContext: Error al insertar cliente:', insertError);
+          throw insertError;
+        }
+        
+        console.log('✅ AuthContext: Cliente insertado exitosamente en la tabla clients');
+        
+        // Limpiar datos de localStorage
+        localStorage.removeItem('fuddi-client-registration');
+      }
+    } catch (error) {
+      console.error('❌ AuthContext: Error en handleClientRegistration:', error);
+    }
+  };
+
   // Función simplificada para crear objeto de usuario
   const createUserObject = (supabaseUser: any): User | null => {
     console.log('🔍 AuthContext: createUserObject - Iniciando para usuario:', supabaseUser.id);
@@ -63,35 +98,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Función simplificada para obtener sesión inicial
-    const getInitialSession = async () => {
+  const getInitialSession = async () => {
     console.log('🚀 AuthContext: getInitialSession - Iniciando...');
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
       console.log('🔍 AuthContext: getInitialSession - Sesión obtenida:', !!session);
       
-        if (session?.user) {
+      if (session?.user) {
         console.log('🔍 AuthContext: getInitialSession - Usuario encontrado:', session.user.id);
+        
+        // Manejar registro de cliente si es necesario
+        await handleClientRegistration(session.user);
         
         const userData = createUserObject(session.user);
         console.log('🔍 AuthContext: getInitialSession - Objeto de usuario creado:', !!userData);
         
-          if (userData) {
+        if (userData) {
           console.log('✅ AuthContext: getInitialSession - Usuario configurado exitosamente');
-            setUser(userData);
-            localStorage.setItem('fuddi-user', JSON.stringify(userData));
+          setUser(userData);
+          localStorage.setItem('fuddi-user', JSON.stringify(userData));
         } else {
           console.log('❌ AuthContext: getInitialSession - No se pudo crear objeto de usuario');
         }
       } else {
         console.log('🔍 AuthContext: getInitialSession - No hay sesión activa');
-        }
-      } catch (error) {
-      console.error('❌ AuthContext: getInitialSession - Error:', error);
-      } finally {
-      console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('❌ AuthContext: getInitialSession - Error:', error);
+    } finally {
+      console.log('✅ AuthContext: getInitialSession - Finalizando, isLoading = false');
+      setIsLoading(false);
+    }
+  };
 
   // useEffect simple en lugar de useStableEffect
   useEffect(() => {
@@ -103,6 +141,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🔍 AuthContext: onAuthStateChange - Evento:', event);
         
         if (event === 'SIGNED_IN' && session?.user) {
+          // Manejar registro de cliente si es necesario
+          await handleClientRegistration(session.user);
+          
           const userData = createUserObject(session.user);
           if (userData) {
             setUser(userData);
