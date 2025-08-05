@@ -49,55 +49,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Solo procesar si es un cliente
       if (supabaseUser.user_metadata?.type === 'client') {
-        // Verificar si el cliente ya existe en la tabla
-        const { data: existingClient, error: checkError } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', supabaseUser.id)
-          .single();
+        // Obtener datos de user_metadata primero
+        const metadata = supabaseUser.user_metadata || {};
+        let clientData = {
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          first_name: metadata.firstName || metadata.given_name || 'Cliente',
+          last_name: metadata.lastName || metadata.family_name || '',
+          address: metadata.address || '',
+        };
         
-        if (checkError && checkError.code !== 'PGRST116') {
-          console.error('❌ AuthContext: Error al verificar cliente existente:', checkError);
-          return;
+        // Verificar si hay datos de registro en localStorage como respaldo
+        const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
+        if (clientRegistrationData) {
+          try {
+            const registrationData = JSON.parse(clientRegistrationData);
+            // Usar datos de localStorage solo si no están en metadata
+            clientData = {
+              ...clientData,
+              first_name: metadata.firstName || registrationData.firstName || clientData.first_name,
+              last_name: metadata.lastName || registrationData.lastName || clientData.last_name,
+              address: metadata.address || registrationData.address || clientData.address,
+            };
+            localStorage.removeItem('fuddi-client-registration');
+          } catch (error) {
+            console.error('❌ AuthContext: Error al parsear datos de localStorage:', error);
+          }
         }
         
-        // Si el cliente no existe, insertarlo
-        if (!existingClient) {
-          // Obtener datos de user_metadata primero
-          const metadata = supabaseUser.user_metadata || {};
-          let clientData = {
-            id: supabaseUser.id,
-            email: supabaseUser.email,
-            first_name: metadata.firstName || metadata.given_name || 'Cliente',
-            last_name: metadata.lastName || metadata.family_name || '',
-            address: metadata.address || '',
-          };
-          
-          // Verificar si hay datos de registro en localStorage como respaldo
-          const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
-          if (clientRegistrationData) {
-            try {
-              const registrationData = JSON.parse(clientRegistrationData);
-              // Usar datos de localStorage solo si no están en metadata
-              clientData = {
-                ...clientData,
-                first_name: metadata.firstName || registrationData.firstName || clientData.first_name,
-                last_name: metadata.lastName || registrationData.lastName || clientData.last_name,
-                address: metadata.address || registrationData.address || clientData.address,
-              };
-              localStorage.removeItem('fuddi-client-registration');
-            } catch (error) {
-              console.error('❌ AuthContext: Error al parsear datos de localStorage:', error);
-            }
-          }
-          
-          // Insertar cliente en la tabla clients
-          const { error: insertError } = await supabase.from('clients').insert(clientData);
-          
-          if (insertError) {
-            console.error('❌ AuthContext: Error al insertar cliente:', insertError);
-            throw insertError;
-          }
+        // Insertar cliente en la tabla clients (ignorar errores de duplicado)
+        const { error: insertError } = await supabase.from('clients').insert(clientData);
+        
+        if (insertError && !insertError.message.includes('duplicate')) {
+          console.error('❌ AuthContext: Error al insertar cliente:', insertError);
         }
       }
     } catch (error) {
@@ -125,15 +109,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Manejar registro de cliente si es necesario
-        await handleClientRegistration(session.user);
-        
         const userData = createUserObject(session.user);
         
         if (userData) {
           setUser(userData);
           localStorage.setItem('fuddi-user', JSON.stringify(userData));
         }
+        
+        // Manejar registro de cliente de forma asíncrona (no bloquear)
+        handleClientRegistration(session.user).catch(error => {
+          console.error('Error en handleClientRegistration:', error);
+        });
       }
     } catch (error) {
       console.error('❌ AuthContext: getInitialSession - Error:', error);
@@ -149,16 +135,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        
         if (event === 'SIGNED_IN' && session?.user) {
-          // Manejar registro de cliente si es necesario
-          await handleClientRegistration(session.user);
-          
           const userData = createUserObject(session.user);
           if (userData) {
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
           }
+          
+          // Manejar registro de cliente de forma asíncrona (no bloquear)
+          handleClientRegistration(session.user).catch(error => {
+            console.error('Error en handleClientRegistration:', error);
+          });
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           localStorage.removeItem('fuddi-user');
