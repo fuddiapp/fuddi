@@ -46,9 +46,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Función para manejar la inserción de clientes después de la verificación
   const handleClientRegistration = async (supabaseUser: any) => {
+    console.log('🔍 AuthContext: handleClientRegistration - Iniciando...');
+    console.log('🔍 AuthContext: handleClientRegistration - Usuario:', supabaseUser.id);
+    console.log('🔍 AuthContext: handleClientRegistration - Tipo:', supabaseUser.user_metadata?.type);
+    
     try {
       // Verificar si hay datos de registro de cliente en localStorage
       const clientRegistrationData = localStorage.getItem('fuddi-client-registration');
+      console.log('🔍 AuthContext: handleClientRegistration - Datos en localStorage:', !!clientRegistrationData);
       
       if (clientRegistrationData && supabaseUser.user_metadata?.type === 'client') {
         const registrationData = JSON.parse(clientRegistrationData);
@@ -73,6 +78,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Limpiar datos de localStorage
         localStorage.removeItem('fuddi-client-registration');
+      } else {
+        console.log('🔍 AuthContext: handleClientRegistration - No se cumplen las condiciones para insertar cliente');
+        console.log('🔍 AuthContext: handleClientRegistration - clientRegistrationData existe:', !!clientRegistrationData);
+        console.log('🔍 AuthContext: handleClientRegistration - user_metadata.type es client:', supabaseUser.user_metadata?.type === 'client');
       }
     } catch (error) {
       console.error('❌ AuthContext: Error en handleClientRegistration:', error);
