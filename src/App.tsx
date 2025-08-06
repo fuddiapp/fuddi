@@ -14,6 +14,8 @@ import RegisterTypePage from '@/pages/RegisterTypePage';
 import ClientRegisterPage from '@/pages/ClientRegisterPage';
 import BusinessRegisterPage from '@/pages/BusinessRegisterPage';
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 
 // Páginas principales
 import LandingPage from '@/pages/LandingPage';
@@ -78,6 +80,16 @@ function AppRoutes() {
         <Route path="/login" element={
           <PublicRoute>
             <LoginPage />
+          </PublicRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <PublicRoute>
+            <ForgotPasswordPage />
+          </PublicRoute>
+        } />
+        <Route path="/reset-password" element={
+          <PublicRoute>
+            <ResetPasswordPage />
           </PublicRoute>
         } />
         <Route path="/register" element={

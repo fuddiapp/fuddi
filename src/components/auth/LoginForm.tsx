@@ -103,7 +103,12 @@ const LoginForm = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Contraseña</Label>
-              <Button variant="link" size="sm" className="px-0 text-fuddi-purple">
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="px-0 text-fuddi-purple"
+                onClick={() => navigate('/forgot-password')}
+              >
                 ¿Olvidaste tu contraseña?
               </Button>
             </div>
