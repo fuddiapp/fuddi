@@ -224,6 +224,10 @@ const ClientHomePage: React.FC = () => {
       title: 'Tu desayuno perfecto 🍳',
     },
     {
+      key: 'Café',
+      title: 'Café y bebidas calientes ☕',
+    },
+    {
       key: 'Snacks',
       title: 'Snacks para cualquier momento 🍿',
     },
@@ -259,17 +263,36 @@ const ClientHomePage: React.FC = () => {
       key: 'Bajo en calorías',
       title: 'Bajo en calorías, alto en sabor 💪',
     },
+    {
+      key: 'Comida rápida',
+      title: 'Comida rápida y deliciosa 🍔',
+    },
+    {
+      key: 'Postres',
+      title: 'Postres irresistibles 🍰',
+    },
+    {
+      key: 'Restaurante',
+      title: 'Experiencias gastronómicas 🍽️',
+    },
   ];
 
   // Mapeo de emojis para categorías de promociones/productos
   const promoCategoryEmojis: Record<string, string> = {
     Desayunos: '🍳',
-    Almuerzos: '🍕',
+    Café: '☕',
     Snacks: '🍿',
+    Almuerzos: '🍕',
     Dulces: '🍰',
     Bebidas: '🥤',
     Vegetariano: '🥗',
-    // Agrega más si tienes más categorías
+    Ensaladas: '🥗',
+    Repostería: '🧁',
+    'Frutas/Naturales': '🍎',
+    'Bajo en calorías': '💪',
+    'Comida rápida': '🍔',
+    Postres: '🍰',
+    Restaurante: '🍽️',
   };
 
   // Filtrar promociones basado en búsqueda, categoría y distancia
