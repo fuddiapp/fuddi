@@ -25,6 +25,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+
 const AppSidebar = () => {
   const navigate = useNavigate();
   

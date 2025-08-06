@@ -8,6 +8,7 @@ import PromotionCard from '@/components/promotions/PromotionCard';
 import { Plus, Search, Filter, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePromotions } from '@/contexts/PromotionsContext';
+import { PromotionsLimitMini } from '@/components/business/PromotionsLimitMini';
 
 const categories = [
   'Todas',
@@ -73,13 +74,19 @@ const PromotionsPage = () => {
               Gestiona todas tus promociones y ofertas especiales
             </p>
           </div>
-          <Button 
-            onClick={() => navigate('/promotions/new')}
-            className="bg-fuddi-purple hover:bg-fuddi-purple/90 text-white px-6 py-2 shadow-lg"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Promoción
-          </Button>
+          <div className="flex items-center gap-4">
+            {/* Contador de límite de promociones */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              <PromotionsLimitMini />
+            </div>
+            <Button 
+              onClick={() => navigate('/promotions/new')}
+              className="bg-fuddi-purple hover:bg-fuddi-purple/90 text-white px-6 py-2 shadow-lg"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva Promoción
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}

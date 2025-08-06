@@ -46,11 +46,13 @@ export const usePromotionsLimit = () => {
 
       const maxPromotions = businessData?.max_promotions || 25;
 
-      // Contar promociones actuales del negocio
+      // Contar solo promociones activas del negocio
+      const now = new Date().toISOString().split('T')[0];
       const { count: currentPromotions, error: countError } = await supabase
         .from('promotions')
         .select('*', { count: 'exact', head: true })
-        .eq('business_id', user.id);
+        .eq('business_id', user.id)
+        .or(`is_indefinite.eq.true,and(start_date.lte.${now},or(end_date.is.null,end_date.gte.${now}))`);
 
       if (countError) {
         console.error('Error contando promociones:', countError);
@@ -97,11 +99,13 @@ export const usePromotionsLimit = () => {
 
       const maxPromotions = businessData?.max_promotions || 25;
 
-      // Contar promociones actuales
+      // Contar solo promociones activas
+      const now = new Date().toISOString().split('T')[0];
       const { count: currentPromotions, error: countError } = await supabase
         .from('promotions')
         .select('*', { count: 'exact', head: true })
-        .eq('business_id', user.id);
+        .eq('business_id', user.id)
+        .or(`is_indefinite.eq.true,and(start_date.lte.${now},or(end_date.is.null,end_date.gte.${now}))`);
 
       if (countError) {
         console.error('Error contando promociones:', countError);
@@ -119,8 +123,8 @@ export const usePromotionsLimit = () => {
 
   const showLimitReachedError = useCallback(() => {
     toast({
-      title: "Límite de promociones alcanzado",
-      description: `Has alcanzado el límite máximo de ${limit.max} promociones. Elimina algunas promociones existentes para crear nuevas.`,
+      title: "Límite de promociones activas alcanzado",
+      description: `Has alcanzado el límite máximo de ${limit.max} promociones activas. Elimina algunas promociones existentes para crear nuevas.`,
       variant: "destructive",
     });
   }, [limit.max, toast]);

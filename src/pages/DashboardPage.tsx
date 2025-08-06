@@ -30,7 +30,6 @@ import TrendsCard from '@/components/dashboard/TrendsCard';
 import { getDashboardStats, DashboardStats } from '@/integrations/supabase/dashboard-stats';
 import { getCurrentDate } from '@/lib/utils';
 import { useAutoRefreshMenus } from '@/hooks/use-auto-refresh-menus';
-import { PromotionsLimitCounter } from '@/components/business/PromotionsLimitCounter';
 
 
 const DashboardPage = () => {
@@ -338,10 +337,6 @@ const DashboardPage = () => {
             />
           </div>
 
-          {/* Contador de límite de promociones */}
-          <div className="w-full bg-white rounded-lg shadow-sm p-4">
-            <PromotionsLimitCounter showAlert={false} />
-          </div>
           {/* Canjes recientes - PRIMERA SECCIÓN DESPUÉS DE MÉTRICAS */}
           {business && dashboardStats && (
             <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">

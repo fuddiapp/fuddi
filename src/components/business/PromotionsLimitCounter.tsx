@@ -63,14 +63,14 @@ export const PromotionsLimitCounter: React.FC<PromotionsLimitCounterProps> = ({
             />
             
             <div className="flex items-center justify-between text-xs text-gray-600">
-              <span>
-                {limit.remaining > 0 
-                  ? `${limit.remaining} promociones restantes`
-                  : isOverLimit 
-                    ? `${Math.abs(limit.remaining)} promociones de más`
-                    : 'Límite alcanzado'
-                }
-              </span>
+                           <span>
+               {limit.remaining > 0 
+                 ? `${limit.remaining} activas restantes`
+                 : isOverLimit 
+                   ? `${Math.abs(limit.remaining)} de más`
+                   : 'Límite alcanzado'
+               }
+             </span>
               
               {isNearLimit && !isAtLimit && (
                 <div className="flex items-center gap-1 text-orange-600">
@@ -100,12 +100,12 @@ export const PromotionsLimitCounter: React.FC<PromotionsLimitCounterProps> = ({
       {showAlert && (isAtLimit || isOverLimit) && (
         <Alert className="mt-3" variant={isOverLimit ? "destructive" : "default"}>
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {isOverLimit 
-              ? `Has excedido el límite de promociones. Elimina ${Math.abs(limit.remaining)} promociones para volver al límite.`
-              : 'Has alcanzado el límite de promociones. Elimina algunas promociones existentes para crear nuevas.'
-            }
-          </AlertDescription>
+                     <AlertDescription>
+             {isOverLimit 
+               ? `Has excedido el límite de promociones activas. Elimina ${Math.abs(limit.remaining)} promociones para volver al límite.`
+               : 'Has alcanzado el límite de promociones activas. Elimina algunas promociones existentes para crear nuevas.'
+             }
+           </AlertDescription>
         </Alert>
       )}
     </>
