@@ -510,6 +510,103 @@ export async function getAllPromotionsWithRealRedemptions(
     console.error('❌ getAllPromotionsWithRealRedemptions: Error:', error);
     return getPromotionsByLocation(userLat || 0, userLng || 0, radiusKm);
   }
+}
+
+// Función para obtener todas las promociones con contador real de canjes (para clientes)
+export async function getAllPromotionsWithRealRedemptionCount(
+  userLat?: number, 
+  userLng?: number, 
+  radiusKm: number = 5
+): Promise<Promotion[]> {
+  try {
+    console.log('🔍 getAllPromotionsWithRealRedemptionCount: Iniciando consulta para clientes');
+    console.log('🔍 getAllPromotionsWithRealRedemptionCount: Parámetros:', { userLat, userLng, radiusKm });
+    
+    // Calcular límites del área de búsqueda
+    const lat = userLat || 0;
+    const lng = userLng || 0;
+    const radius = radiusKm;
+    
+    // Obtener promociones por ubicación
+    const { data: promotions, error: promotionsError } = await supabase
+      .from('promotions')
+      .select(`
+        *,
+        businesses (
+          id,
+          business_name,
+          address,
+          location_lat,
+          location_lng,
+          category
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (promotionsError) {
+      console.error('Error obteniendo promociones:', promotionsError);
+      throw new Error('Error al obtener promociones');
+    }
+
+    if (!promotions || promotions.length === 0) {
+      console.log('✅ No se encontraron promociones');
+      return [];
+    }
+
+    console.log('✅ Promociones encontradas:', promotions.length);
+
+    // Filtrar por distancia si se proporcionan coordenadas
+    let filteredPromotions = promotions;
+    if (lat !== 0 && lng !== 0) {
+      filteredPromotions = promotions.filter((promotion: any) => {
+        const business = promotion.businesses;
+        if (!business || !business.location_lat || !business.location_lng) {
+          return false;
+        }
+        
+        const distance = calculateDistance(lat, lng, business.location_lat, business.location_lng);
+        return distance <= radius;
+      });
+    }
+
+    console.log('✅ Promociones filtradas por distancia:', filteredPromotions.length);
+
+    // Obtener IDs de promociones
+    const promotionIds = filteredPromotions.map((p: any) => p.id);
+
+    // Obtener contadores reales de canjes
+    const { data: redemptionCounts, error: redemptionError } = await (supabase as any)
+      .from('promotion_redemptions')
+      .select('promotion_id, count')
+      .in('promotion_id', promotionIds)
+      .group('promotion_id');
+
+    if (redemptionError) {
+      console.error('Error obteniendo contadores de canjes:', redemptionError);
+      // Continuar sin contadores de canjes
+    }
+
+    // Crear mapa de contadores
+    const redemptionCountMap = new Map();
+    if (redemptionCounts) {
+      redemptionCounts.forEach((item: any) => {
+        redemptionCountMap.set(item.promotion_id, parseInt(item.count));
+      });
+    }
+
+    // Actualizar promociones con contadores reales
+    const promotionsWithRealCounts = filteredPromotions.map((promotion: any) => ({
+      ...promotion,
+      redemptions: redemptionCountMap.get(promotion.id) || 0
+    }));
+
+    console.log('✅ Promociones con contadores reales:', promotionsWithRealCounts.length);
+    
+    return promotionsWithRealCounts;
+  } catch (error) {
+    console.error('Error en getAllPromotionsWithRealRedemptionCount:', error);
+    throw error;
+  }
 } 
 
  
