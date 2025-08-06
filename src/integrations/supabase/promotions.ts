@@ -426,7 +426,69 @@ export async function getPromotionsWithRealRedemptions(businessId: string): Prom
   }
 }
 
-// Función para obtener todas las promociones con contador real (simplificada para clientes)
+// Función para obtener promociones con contador real de canjes
+export async function getPromotionsWithRealRedemptionCount(businessId: string): Promise<Promotion[]> {
+  try {
+    console.log('🔍 getPromotionsWithRealRedemptionCount: Iniciando para businessId:', businessId);
+    
+    // Obtener promociones básicas
+    const { data: promotions, error: promotionsError } = await supabase
+      .from('promotions')
+      .select('*')
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
+
+    if (promotionsError) {
+      console.error('Error obteniendo promociones:', promotionsError);
+      throw new Error('Error al obtener promociones');
+    }
+
+    if (!promotions || promotions.length === 0) {
+      console.log('✅ No se encontraron promociones');
+      return [];
+    }
+
+    console.log('✅ Promociones encontradas:', promotions.length);
+
+    // Obtener IDs de promociones
+    const promotionIds = promotions.map(p => p.id);
+
+    // Obtener contadores reales de canjes
+    const { data: redemptionCounts, error: redemptionError } = await (supabase as any)
+      .from('promotion_redemptions')
+      .select('promotion_id, count')
+      .in('promotion_id', promotionIds)
+      .group('promotion_id');
+
+    if (redemptionError) {
+      console.error('Error obteniendo contadores de canjes:', redemptionError);
+      // Continuar sin contadores de canjes
+    }
+
+    // Crear mapa de contadores
+    const redemptionCountMap = new Map();
+    if (redemptionCounts) {
+      redemptionCounts.forEach((item: any) => {
+        redemptionCountMap.set(item.promotion_id, parseInt(item.count));
+      });
+    }
+
+    // Actualizar promociones con contadores reales
+    const promotionsWithRealCounts = promotions.map(promotion => ({
+      ...promotion,
+      redemptions: redemptionCountMap.get(promotion.id) || 0
+    }));
+
+    console.log('✅ Promociones con contadores reales:', promotionsWithRealCounts.length);
+    
+    return promotionsWithRealCounts;
+  } catch (error) {
+    console.error('Error en getPromotionsWithRealRedemptionCount:', error);
+    throw error;
+  }
+}
+
+// Función para obtener todas las promociones con contador real (para clientes)
 export async function getAllPromotionsWithRealRedemptions(
   userLat?: number, 
   userLng?: number, 
@@ -449,3 +511,5 @@ export async function getAllPromotionsWithRealRedemptions(
     return getPromotionsByLocation(userLat || 0, userLng || 0, radiusKm);
   }
 } 
+
+ 

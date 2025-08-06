@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { getAllPromotionsWithRealRedemptions, getBusinessPromotions } from '@/integrations/supabase/promotions';
+import { getAllPromotionsWithRealRedemptionCount, getBusinessPromotions } from '@/integrations/supabase/promotions';
 import type { Database } from '@/integrations/supabase/types';
 import { useUserLocation } from './UserLocationContext';
 
@@ -62,7 +62,7 @@ export function ClientPromotionsProvider({ children }: { children: ReactNode }) 
       setLoading(true);
       setError(null);
       
-      const data = await getAllPromotionsWithRealRedemptions(lat, lng, radius);
+      const data = await getAllPromotionsWithRealRedemptionCount(lat, lng, radius);
       
       // Convertir el formato de Supabase al formato de la aplicación
       const convertedPromotions: ClientPromotion[] = data.map((promo: any) => ({
