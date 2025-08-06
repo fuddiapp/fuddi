@@ -198,11 +198,18 @@ const ClientHomePage: React.FC = () => {
         }
       }
       
-      const category = promo.category || 'General';
-      if (!grouped[category]) {
-        grouped[category] = [];
-      }
-      grouped[category].push(promo);
+      // Usar categorías múltiples si están disponibles, sino usar la categoría única
+      const categories = promo.tags && promo.tags.length > 0 
+        ? promo.tags 
+        : [promo.category || 'General'];
+      
+      // Agregar la promoción a cada una de sus categorías
+      categories.forEach(category => {
+        if (!grouped[category]) {
+          grouped[category] = [];
+        }
+        grouped[category].push(promo);
+      });
     });
     return grouped;
   }, [convertedPromotions, userLocation]);
