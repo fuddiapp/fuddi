@@ -27,6 +27,7 @@ import { formatPriceCLP } from '@/lib/formatters';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { uploadPromotionImage } from '@/integrations/supabase/promotions';
+import { usePromotionsLimit } from '@/hooks/use-promotions-limit';
 import type { AppPromotion } from '@/contexts/PromotionsContext';
 
 interface PromotionFormProps {
@@ -57,6 +58,7 @@ const PromotionForm = ({
   onCancel 
 }: PromotionFormProps) => {
   const { toast } = useToast();
+  const { limit, isLoading: limitLoading } = usePromotionsLimit();
   
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -542,6 +544,7 @@ const PromotionForm = ({
             <Button 
               type="submit"
               className="bg-fuddi-purple hover:bg-fuddi-purple-light"
+              disabled={!isEdit && (limitLoading || limit.isAtLimit || limit.isOverLimit)}
             >
               {isEdit ? 'Actualizar Promoción' : 'Crear Promoción'}
             </Button>

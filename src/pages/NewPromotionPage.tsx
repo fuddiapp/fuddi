@@ -4,15 +4,25 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { usePromotions } from '@/contexts/PromotionsContext';
+import { usePromotionsLimit } from '@/hooks/use-promotions-limit';
+import { PromotionsLimitCounter } from '@/components/business/PromotionsLimitCounter';
 import type { AppPromotion } from '@/contexts/PromotionsContext';
 
 const NewPromotionPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addPromotion } = usePromotions();
+  const { checkCanCreatePromotion, showLimitReachedError, limit } = usePromotionsLimit();
 
   const handleSubmit = async (data: any) => {
     try {
+      // Verificar límite de promociones antes de crear
+      const canCreate = await checkCanCreatePromotion();
+      if (!canCreate) {
+        showLimitReachedError();
+        return;
+      }
+
       // Procesar categorías - asegurar que siempre sea un array válido
       let categories = [];
       if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
@@ -73,6 +83,11 @@ const NewPromotionPage = () => {
           <p className="text-muted-foreground">
             Completa el formulario para crear una nueva promoción
           </p>
+        </div>
+
+        {/* Contador de límite de promociones */}
+        <div className="mb-6">
+          <PromotionsLimitCounter showAlert={true} />
         </div>
         
         <PromotionForm
