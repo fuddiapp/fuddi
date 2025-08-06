@@ -470,11 +470,7 @@ const BusinessRegisterSteps = () => {
                         <Navigation className="h-4 w-4" />
                       </Button>
                     </div>
-                    {location && (
-                      <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-                        ✅ Ubicación capturada: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
-                      </div>
-                    )}
+
                     {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
                   </div>
                 </>
