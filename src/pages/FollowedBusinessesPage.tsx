@@ -334,7 +334,7 @@ const FollowedBusinessesPage: React.FC = () => {
           onNotificationsClick={handleNotificationsClick}
             onFavoritesClick={() => navigate('/followed')}
             onProfileClick={() => navigate('/profile')}
-            onSettingsClick={() => navigate('/settings')}
+            onSettingsClick={() => navigate('/user/settings')}
           />
         </div>
         <div className="max-w-7xl mx-auto px-4 pb-20 lg:pb-8 space-y-8">
@@ -376,7 +376,7 @@ const FollowedBusinessesPage: React.FC = () => {
           onNotificationsClick={handleNotificationsClick}
           onFavoritesClick={() => navigate('/followed')}
           onProfileClick={() => navigate('/profile')}
-          onSettingsClick={() => navigate('/settings')}
+          onSettingsClick={() => navigate('/user/settings')}
         />
       </div>
       {/* Contenido principal */}
