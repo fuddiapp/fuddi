@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Clock, Store } from 'lucide-react';
+import { MapPin, Clock, Store, Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatPriceCLP } from '@/lib/formatters';
 import { formatDistance } from '@/lib/utils';
@@ -124,20 +124,12 @@ const PromotionCard: React.FC<PromotionCardProps> = ({ promotion, onClick }) => 
           )}
         </div>
 
-        {/* Categories */}
-        {promotion.categories && promotion.categories.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-2">
-            {promotion.categories.slice(0, 2).map((category, index) => (
-              <Badge key={index} variant="outline" className="text-xs bg-gray-50">
-                {category}
-              </Badge>
-            ))}
-            {promotion.categories.length > 2 && (
-              <Badge variant="outline" className="text-xs bg-gray-50">
-                +{promotion.categories.length - 2}
-              </Badge>
-            )}
-      </div>
+        {/* Canjes counter */}
+        {promotion.canjes !== undefined && (
+          <div className="flex items-center gap-1 pt-2">
+            <Gift className="h-3 w-3 text-fuddi-purple" />
+            <span className="text-xs text-gray-600 font-medium">{promotion.canjes} canjes</span>
+          </div>
         )}
       </CardContent>
     </Card>
