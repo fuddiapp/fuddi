@@ -88,11 +88,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
         
-        // Insertar negocio en la tabla businesses (ignorar errores de duplicado)
-        const { error: insertError } = await supabase.from('businesses').insert(businessData);
+        // Verificar si el negocio ya existe antes de insertar
+        const { data: existingBusiness, error: checkError } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('id', supabaseUser.id)
+          .maybeSingle();
         
-        if (insertError && !insertError.message.includes('duplicate')) {
-          console.error('❌ AuthContext: Error al insertar negocio:', insertError);
+        if (checkError) {
+          console.error('❌ AuthContext: Error al verificar negocio existente:', checkError);
+        } else if (!existingBusiness) {
+          // Solo insertar si no existe
+          const { error: insertError } = await supabase.from('businesses').insert(businessData);
+          
+          if (insertError) {
+            console.error('❌ AuthContext: Error al insertar negocio:', insertError);
+          } else {
+            console.log('✅ AuthContext: Negocio insertado exitosamente');
+          }
+        } else {
+          console.log('✅ AuthContext: Negocio ya existe en la base de datos');
         }
       }
     } catch (error) {
@@ -133,11 +148,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
         
-        // Insertar cliente en la tabla clients (ignorar errores de duplicado)
-        const { error: insertError } = await supabase.from('clients').insert(clientData);
+        // Verificar si el cliente ya existe antes de insertar
+        const { data: existingClient, error: checkError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', supabaseUser.id)
+          .maybeSingle();
         
-        if (insertError && !insertError.message.includes('duplicate')) {
-          console.error('❌ AuthContext: Error al insertar cliente:', insertError);
+        if (checkError) {
+          console.error('❌ AuthContext: Error al verificar cliente existente:', checkError);
+        } else if (!existingClient) {
+          // Solo insertar si no existe
+          const { error: insertError } = await supabase.from('clients').insert(clientData);
+          
+          if (insertError) {
+            console.error('❌ AuthContext: Error al insertar cliente:', insertError);
+          } else {
+            console.log('✅ AuthContext: Cliente insertado exitosamente');
+          }
+        } else {
+          console.log('✅ AuthContext: Cliente ya existe en la base de datos');
         }
       }
     } catch (error) {
