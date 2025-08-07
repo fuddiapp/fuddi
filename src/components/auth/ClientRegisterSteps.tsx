@@ -156,10 +156,10 @@ const ClientRegisterSteps = () => {
           Paso 1: Credenciales
         </CardTitle>
         <CardDescription>
-          Crea tu cuenta con correo y contraseña o usa Google para un registro más rápido.
+          Crea tu cuenta con correo y contraseña.
         </CardDescription>
       </CardHeader>
-
+      <CardContent>
         <form onSubmit={handleStep1Submit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Correo Electrónico</Label>
