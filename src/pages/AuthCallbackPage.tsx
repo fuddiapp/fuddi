@@ -10,20 +10,28 @@ const AuthCallbackPage = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('🔍 AuthCallbackPage: Procesando callback...');
+      console.log('🔍 AuthCallbackPage: isLoading:', isLoading);
+      console.log('🔍 AuthCallbackPage: user:', user);
+      
       // Esperar a que el contexto de autenticación procese la sesión
       if (!isLoading) {
         if (user) {
           // Verificar si el usuario viene de un registro con Google
           const urlParams = new URLSearchParams(location.search);
           const fromRegistration = urlParams.get('from_registration');
+          console.log('🔍 AuthCallbackPage: fromRegistration:', fromRegistration);
           
           if (fromRegistration === 'client') {
+            console.log('✅ AuthCallbackPage: Redirigiendo a /register/client');
             // Si viene del registro de cliente, redirigir de vuelta al formulario
             navigate('/register/client');
           } else if (fromRegistration === 'business') {
+            console.log('✅ AuthCallbackPage: Redirigiendo a /register/business');
             // Si viene del registro de negocio, redirigir de vuelta al formulario
             navigate('/register/business');
           } else {
+            console.log('🔄 AuthCallbackPage: Flujo normal de autenticación');
             // Flujo normal de autenticación
             if (user.type === 'business') {
               navigate('/dashboard');
@@ -41,9 +49,12 @@ const AuthCallbackPage = () => {
             }
           }
         } else {
+          console.log('❌ AuthCallbackPage: No hay usuario, redirigiendo a /login');
           // No hay usuario, redirigir al login
           navigate('/login');
         }
+      } else {
+        console.log('⏳ AuthCallbackPage: Esperando que se cargue la sesión...');
       }
     };
     

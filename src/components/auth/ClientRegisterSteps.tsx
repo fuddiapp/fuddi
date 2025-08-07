@@ -111,8 +111,11 @@ const ClientRegisterSteps = () => {
   // Al cargar, si hay sesión y no hay googleUser, obtener datos de Google
   React.useEffect(() => {
     const checkGoogleUser = async () => {
+      console.log('🔍 ClientRegisterSteps: Verificando sesión de Google...');
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (session?.user && !googleUser) {
+        console.log('✅ ClientRegisterSteps: Usuario autenticado encontrado:', session.user.email);
         const { email, user_metadata, id } = session.user;
         
         // Verificar si el usuario ya existe en la tabla clients
@@ -123,6 +126,7 @@ const ClientRegisterSteps = () => {
           .maybeSingle();
         
         if (existingClient) {
+          console.log('✅ ClientRegisterSteps: Cliente ya existe, redirigiendo al home');
           // Si ya existe, redirigir al home
           login({
             id,
@@ -135,6 +139,7 @@ const ClientRegisterSteps = () => {
           return;
         }
         
+        console.log('🔄 ClientRegisterSteps: Configurando usuario de Google para completar registro');
         // Si no existe, configurar para completar el registro
         setGoogleUser({
           id,
@@ -147,6 +152,11 @@ const ClientRegisterSteps = () => {
         setFirstName(user_metadata.given_name || '');
         setLastName(user_metadata.family_name || '');
         setCurrentStep(2); // Saltar al paso de ubicación
+        console.log('✅ ClientRegisterSteps: Usuario configurado, paso actual:', 2);
+      } else if (!session?.user) {
+        console.log('❌ ClientRegisterSteps: No hay sesión activa');
+      } else if (googleUser) {
+        console.log('✅ ClientRegisterSteps: Usuario de Google ya configurado');
       }
     };
     checkGoogleUser();
