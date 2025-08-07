@@ -513,12 +513,7 @@ const ClientHomePage: React.FC = () => {
               }
             </p>
 
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-fuddi-purple text-white px-6 py-2 rounded-lg hover:bg-fuddi-purple-light transition-colors"
-            >
-              Actualizar
-            </button>
+
           </div>
         )}
 
