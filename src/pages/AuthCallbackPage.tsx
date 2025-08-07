@@ -1,29 +1,54 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // Esperar a que el contexto de autenticación procese la sesión
-    if (!isLoading) {
-      if (user) {
-        // El usuario ya está autenticado, redirigir según su tipo
-        if (user.type === 'business') {
-          navigate('/dashboard');
-        } else if (user.type === 'client') {
-          navigate('/client');
+    const handleCallback = async () => {
+      // Esperar a que el contexto de autenticación procese la sesión
+      if (!isLoading) {
+        if (user) {
+          // Verificar si el usuario viene de un registro con Google
+          const urlParams = new URLSearchParams(location.search);
+          const fromRegistration = urlParams.get('from_registration');
+          
+          if (fromRegistration === 'client') {
+            // Si viene del registro de cliente, redirigir de vuelta al formulario
+            navigate('/register/client');
+          } else if (fromRegistration === 'business') {
+            // Si viene del registro de negocio, redirigir de vuelta al formulario
+            navigate('/register/business');
+          } else {
+            // Flujo normal de autenticación
+            if (user.type === 'business') {
+              navigate('/dashboard');
+            } else if (user.type === 'client') {
+              // Verificar si el cliente tiene datos completos
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.user?.user_metadata?.address) {
+                navigate('/home');
+              } else {
+                // Si no tiene datos completos, redirigir al registro
+                navigate('/register/type');
+              }
+            } else {
+              navigate('/register/type');
+            }
+          }
         } else {
-          navigate('/register/type');
+          // No hay usuario, redirigir al login
+          navigate('/login');
         }
-      } else {
-        // No hay usuario, redirigir al login
-        navigate('/login');
       }
-    }
-  }, [user, isLoading, navigate]);
+    };
+    
+    handleCallback();
+  }, [user, isLoading, navigate, location]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Función para manejar la inserción de clientes después de la verificación
   const handleClientRegistration = async (supabaseUser: any) => {
     try {
-      // Solo procesar si es un cliente
+      // Solo procesar si es un cliente y tiene datos completos
       if (supabaseUser.user_metadata?.type === 'client') {
         // Obtener datos de user_metadata primero
         const metadata = supabaseUser.user_metadata || {};
@@ -148,26 +148,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
         
-        // Verificar si el cliente ya existe antes de insertar
-        const { data: existingClient, error: checkError } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', supabaseUser.id)
-          .maybeSingle();
-        
-        if (checkError) {
-          console.error('❌ AuthContext: Error al verificar cliente existente:', checkError);
-        } else if (!existingClient) {
-          // Solo insertar si no existe
-          const { error: insertError } = await supabase.from('clients').insert(clientData);
+        // Solo insertar si tiene dirección (datos completos)
+        if (clientData.address && clientData.address.trim()) {
+          // Verificar si el cliente ya existe antes de insertar
+          const { data: existingClient, error: checkError } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('id', supabaseUser.id)
+            .maybeSingle();
           
-          if (insertError) {
-            console.error('❌ AuthContext: Error al insertar cliente:', insertError);
+          if (checkError) {
+            console.error('❌ AuthContext: Error al verificar cliente existente:', checkError);
+          } else if (!existingClient) {
+            // Solo insertar si no existe
+            const { error: insertError } = await supabase.from('clients').insert(clientData);
+            
+            if (insertError) {
+              console.error('❌ AuthContext: Error al insertar cliente:', insertError);
+            } else {
+              console.log('✅ AuthContext: Cliente insertado exitosamente');
+            }
           } else {
-            console.log('✅ AuthContext: Cliente insertado exitosamente');
+            console.log('✅ AuthContext: Cliente ya existe en la base de datos');
           }
         } else {
-          console.log('✅ AuthContext: Cliente ya existe en la base de datos');
+          console.log('⚠️ AuthContext: Cliente sin datos completos, esperando completar registro');
         }
       }
     } catch (error) {
@@ -180,11 +185,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Usar user_metadata para determinar el tipo
     const userType = supabaseUser.user_metadata?.type || 'client';
     
+    // Si el usuario viene de Google y no tiene tipo definido, no asignar tipo automáticamente
+    // para permitir que complete el registro
+    const finalUserType = userType === 'client' && !supabaseUser.user_metadata?.address ? 'client' : userType;
+    
     return {
       id: supabaseUser.id,
       name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
       email: supabaseUser.email || '',
-      type: userType,
+      type: finalUserType,
       token: '',
     };
   };
