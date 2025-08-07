@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import RegistrationSuccess from './RegistrationSuccess';
 import { AddressAutocompleteInput } from '../ui/address-autocomplete';
 import { supabase } from '@/integrations/supabase/client';
-import { FcGoogle } from 'react-icons/fc';
 import EmailVerificationNotice from './EmailVerificationNotice';
 
 interface Step1Data {
@@ -35,8 +34,6 @@ const ClientRegisterSteps = () => {
   const [address, setAddress] = useState('');
   const [addressMode, setAddressMode] = useState<'manual' | 'geo'>('manual');
   const [geoLoading, setGeoLoading] = useState(false);
-  // Nuevo estado para saber si el usuario viene de Google
-  const [googleUser, setGoogleUser] = useState<any>(null);
   const [showVerification, setShowVerification] = useState(false);
 
   const handleStep1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,73 +92,9 @@ const ClientRegisterSteps = () => {
     }, 1000);
   };
 
-  // Manejar registro con Google
-  const handleGoogleRegister = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?from_registration=client`
-      }
-    });
-    if (error) {
-      setErrors({ google: 'Error al iniciar sesión con Google' });
-    }
-  };
 
-  // Al cargar, si hay sesión y no hay googleUser, obtener datos de Google
-  React.useEffect(() => {
-    const checkGoogleUser = async () => {
-      console.log('🔍 ClientRegisterSteps: Verificando sesión de Google...');
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user && !googleUser) {
-        console.log('✅ ClientRegisterSteps: Usuario autenticado encontrado:', session.user.email);
-        const { email, user_metadata, id } = session.user;
-        
-        // Verificar si el usuario ya existe en la tabla clients
-        const { data: existingClient } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', id)
-          .maybeSingle();
-        
-        if (existingClient) {
-          console.log('✅ ClientRegisterSteps: Cliente ya existe, redirigiendo al home');
-          // Si ya existe, redirigir al home
-          login({
-            id,
-            name: `${user_metadata.given_name || ''} ${user_metadata.family_name || ''}`.trim() || email,
-            email,
-            type: 'client',
-            token: '',
-          });
-          navigate('/home');
-          return;
-        }
-        
-        console.log('🔄 ClientRegisterSteps: Configurando usuario de Google para completar registro');
-        // Si no existe, configurar para completar el registro
-        setGoogleUser({
-          id,
-          email,
-          firstName: user_metadata.given_name || '',
-          lastName: user_metadata.family_name || '',
-          avatar: user_metadata.avatar_url || '',
-        });
-        setStep1Data(prev => ({ ...prev, email: email || '' }));
-        setFirstName(user_metadata.given_name || '');
-        setLastName(user_metadata.family_name || '');
-        setCurrentStep(2); // Saltar al paso de ubicación
-        console.log('✅ ClientRegisterSteps: Usuario configurado, paso actual:', 2);
-      } else if (!session?.user) {
-        console.log('❌ ClientRegisterSteps: No hay sesión activa');
-      } else if (googleUser) {
-        console.log('✅ ClientRegisterSteps: Usuario de Google ya configurado');
-      }
-    };
-    checkGoogleUser();
-    // eslint-disable-next-line
-  }, [googleUser, login, navigate]);
+
+
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,70 +102,37 @@ const ClientRegisterSteps = () => {
     setIsLoading(true);
     
     try {
-      let userId = googleUser?.id;
-      let email = googleUser?.email || step1Data.email;
-      let first = googleUser?.firstName || firstName;
-      let last = googleUser?.lastName || lastName;
-      
-      // Si no viene de Google, crear usuario en Auth
-      if (!googleUser) {
-        const { data, error } = await supabase.auth.signUp({
-          email: step1Data.email,
-          password: step1Data.password,
-          options: { 
-            data: { 
-              type: 'client',
-              firstName: firstName,
-              lastName: lastName,
-              address: address
-            } 
-          }
-        });
-        if (error || !data.user) {
-          setErrors({ email: 'Error al crear usuario' });
-          setIsLoading(false);
-          return;
+      // Crear usuario en Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: step1Data.email,
+        password: step1Data.password,
+        options: { 
+          data: { 
+            type: 'client',
+            firstName: firstName,
+            lastName: lastName,
+            address: address
+          } 
         }
-        // Guardar datos en localStorage como respaldo
-        localStorage.setItem('fuddi-client-registration', JSON.stringify({
-          email: step1Data.email,
-          firstName,
-          lastName,
-          address
-        }));
-        // Mostrar pantalla de verificación de correo
-        setIsLoading(false);
-        setShowVerification(true);
-        return;
-      }
-      
-      // FLUJO GOOGLE: Insertar en clients
-      const { error: insertError } = await supabase.from('clients').insert({
-        id: userId,
-        email,
-        first_name: first,
-        last_name: last,
-        address,
       });
       
-      if (insertError) {
-        console.error('Error al insertar cliente:', insertError);
-        setErrors({ address: 'Error al guardar datos del cliente' });
+      if (error || !data.user) {
+        setErrors({ email: 'Error al crear usuario' });
         setIsLoading(false);
         return;
       }
       
-      // Login local y mostrar éxito
-      login({
-        id: userId,
-        name: `${first} ${last}`.trim() || email,
-        email,
-        type: 'client',
-        token: '',
-      });
+      // Guardar datos en localStorage como respaldo
+      localStorage.setItem('fuddi-client-registration', JSON.stringify({
+        email: step1Data.email,
+        firstName,
+        lastName,
+        address
+      }));
       
-      setShowSuccess(true);
+      // Mostrar pantalla de verificación de correo
       setIsLoading(false);
+      setShowVerification(true);
     } catch (error) {
       console.error('Error en handleStep2Submit:', error);
       setErrors({ address: 'Error inesperado al completar el registro' });
@@ -259,21 +159,7 @@ const ClientRegisterSteps = () => {
           Crea tu cuenta con correo y contraseña o usa Google para un registro más rápido.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded-lg shadow-sm transition mb-4"
-          onClick={handleGoogleRegister}
-        >
-          <FcGoogle className="w-5 h-5" />
-          Registrarse con Google
-        </Button>
-        <div className="flex items-center my-4">
-          <div className="flex-grow border-t border-gray-200"></div>
-          <span className="mx-2 text-gray-400 text-xs">o</span>
-          <div className="flex-grow border-t border-gray-200"></div>
-        </div>
+
         <form onSubmit={handleStep1Submit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Correo Electrónico</Label>
