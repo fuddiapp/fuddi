@@ -51,7 +51,7 @@ export const UserLocationProvider: React.FC<UserLocationProviderProps> = ({ chil
         // Obtener datos del cliente desde Supabase
         const { data: clientData, error } = await supabase
           .from('clients')
-          .select('address, location_lat, location_lng')
+          .select('address, location_lat, location_lng, first_name, last_name')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -96,6 +96,16 @@ export const UserLocationProvider: React.FC<UserLocationProviderProps> = ({ chil
                 latitude: 0,
                 longitude: 0,
               });
+            }
+          }
+          
+          // Actualizar también el nombre del usuario en localStorage si tenemos los datos
+          if (clientData.first_name && clientData.last_name) {
+            const userData = JSON.parse(localStorage.getItem('fuddi-user') || '{}');
+            if (userData.id === user.id) {
+              userData.name = `${clientData.first_name} ${clientData.last_name}`.trim();
+              userData.address = clientData.address;
+              localStorage.setItem('fuddi-user', JSON.stringify(userData));
             }
           }
         }

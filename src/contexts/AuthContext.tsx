@@ -181,62 +181,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Función simplificada para crear objeto de usuario
-  const createUserObject = async (supabaseUser: any): Promise<User | null> => {
-    try {
-      // Usar user_metadata para determinar el tipo
-      const userType = supabaseUser.user_metadata?.type || 'client';
-      
-      // Si el usuario viene de Google y no tiene tipo definido, no asignar tipo automáticamente
-      // para permitir que complete el registro
-      const finalUserType = userType === 'client' && !supabaseUser.user_metadata?.address ? 'client' : userType;
-      
-      // Si es cliente, obtener datos completos desde la base de datos
-      if (finalUserType === 'client') {
-        try {
-          const { data: clientData, error } = await supabase
-            .from('clients')
-            .select('first_name, last_name, address')
-            .eq('id', supabaseUser.id)
-            .maybeSingle();
-          
-          if (error) {
-            console.error('Error obteniendo datos del cliente:', error);
-          }
-          
-          if (clientData) {
-            return {
-              id: supabaseUser.id,
-              name: `${clientData.first_name} ${clientData.last_name}`.trim() || supabaseUser.email || '',
-              email: supabaseUser.email || '',
-              type: finalUserType,
-              token: '',
-              address: clientData.address || '',
-            };
-          }
-        } catch (error) {
-          console.error('Error en createUserObject al obtener datos del cliente:', error);
-        }
-      }
-      
-      // Fallback: crear usuario básico sin datos de la base de datos
-      return {
-        id: supabaseUser.id,
-        name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
-        email: supabaseUser.email || '',
-        type: finalUserType,
-        token: '',
-      };
-    } catch (error) {
-      console.error('Error crítico en createUserObject:', error);
-      // En caso de error crítico, devolver usuario básico
-      return {
-        id: supabaseUser.id,
-        name: supabaseUser.email || '',
-        email: supabaseUser.email || '',
-        type: 'client',
-        token: '',
-      };
-    }
+  const createUserObject = (supabaseUser: any): User | null => {
+    // Usar user_metadata para determinar el tipo
+    const userType = supabaseUser.user_metadata?.type || 'client';
+    
+    return {
+      id: supabaseUser.id,
+      name: supabaseUser.user_metadata?.name || supabaseUser.email || '',
+      email: supabaseUser.email || '',
+      type: userType,
+      token: '',
+    };
   };
 
   // Función simplificada para obtener sesión inicial
@@ -245,13 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Agregar timeout para evitar carga infinita
-        const userData = await Promise.race([
-          createUserObject(session.user),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 5000)
-          )
-        ]);
+        const userData = createUserObject(session.user);
         
         if (userData) {
           setUser(userData);
@@ -269,19 +218,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('❌ AuthContext: getInitialSession - Error:', error);
-      // En caso de error, crear usuario básico para evitar carga infinita
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const basicUser = {
-          id: session.user.id,
-          name: session.user.email || '',
-          email: session.user.email || '',
-          type: 'client' as const,
-          token: '',
-        };
-        setUser(basicUser);
-        localStorage.setItem('fuddi-user', JSON.stringify(basicUser));
-      }
     } finally {
       setIsLoading(false);
     }
@@ -295,7 +231,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
-          const userData = await createUserObject(session.user);
+          const userData = createUserObject(session.user);
           if (userData) {
             setUser(userData);
             localStorage.setItem('fuddi-user', JSON.stringify(userData));
