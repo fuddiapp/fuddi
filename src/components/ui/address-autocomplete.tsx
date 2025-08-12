@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, Locate, Loader2 } from 'lucide-react';
 import { useGoogleMaps } from '@/hooks/use-google-maps';
+import { Button } from '@/components/ui/button';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -12,6 +13,9 @@ interface AddressAutocompleteProps {
   disabled?: boolean;
   showIcon?: boolean;
   variant?: 'default' | 'compact';
+  showLocationButton?: boolean;
+  onGetCurrentLocation?: () => Promise<void>;
+  geoLoading?: boolean;
 }
 
 export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({ 
@@ -23,16 +27,30 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
   className,
   disabled,
   showIcon = true,
-  variant = 'default'
+  variant = 'default',
+  showLocationButton = false,
+  onGetCurrentLocation,
+  geoLoading = false
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const { isLoaded } = useGoogleMaps();
 
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && inputRef.current) {
+      initializeAutocomplete();
+    }
+  }, [isLoaded]);
+
+  // Reinicializar cuando el componente se monta
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoaded && inputRef.current && !autocompleteRef.current) {
         initializeAutocomplete();
       }
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [isLoaded]);
 
   // Aplicar estilos CSS para el autocompletado
@@ -148,7 +166,7 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
 
   const handleInputFocus = () => {
     // Asegurar que el autocomplete esté inicializado cuando el usuario hace focus
-    if (!autocompleteRef.current && isLoaded) {
+    if (!autocompleteRef.current && isLoaded && inputRef.current) {
       initializeAutocomplete();
     }
     
@@ -162,6 +180,12 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
     }, 100);
   };
 
+  const handleGetCurrentLocation = async () => {
+    if (onGetCurrentLocation) {
+      await onGetCurrentLocation();
+    }
+  };
+
   const baseInputClasses = "w-full border rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-fuddi-purple focus:border-transparent";
   const variantClasses = variant === 'compact' 
     ? "px-3 py-2 text-sm" 
@@ -169,30 +193,80 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
 
   return (
     <div className={`relative ${className || ''}`} style={{ zIndex: 99999 }}>
-      {showIcon && (
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-          <MapPin className="h-4 w-4" />
+      {showLocationButton ? (
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            {showIcon && (
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <MapPin className="h-4 w-4" />
+              </div>
+            )}
+            
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              placeholder={placeholder || 'Buscar dirección...'}
+              className={`${baseInputClasses} ${variantClasses} ${showIcon ? 'pl-10' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
+              autoComplete="off"
+              disabled={disabled}
+              spellCheck="false"
+            />
+            
+            {/* Indicador silencioso */}
+            {!isLoaded && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+                <Search className="h-4 w-4" />
+              </div>
+            )}
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleGetCurrentLocation}
+            className="shrink-0"
+            title="Usar ubicación actual"
+            disabled={geoLoading || disabled}
+          >
+            {geoLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Locate className="h-4 w-4" />
+            )}
+          </Button>
         </div>
-      )}
-      
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={handleInputChange}
-        onFocus={handleInputFocus}
-        placeholder={placeholder || 'Buscar dirección...'}
-        className={`${baseInputClasses} ${variantClasses} ${showIcon ? 'pl-10' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
-        autoComplete="off"
-        disabled={disabled}
-        spellCheck="false"
-      />
-      
-      {/* Indicador silencioso */}
-      {!isLoaded && (
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
-          <Search className="h-4 w-4" />
-        </div>
+      ) : (
+        <>
+          {showIcon && (
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <MapPin className="h-4 w-4" />
+            </div>
+          )}
+          
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            placeholder={placeholder || 'Buscar dirección...'}
+            className={`${baseInputClasses} ${variantClasses} ${showIcon ? 'pl-10' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
+            autoComplete="off"
+            disabled={disabled}
+            spellCheck="false"
+          />
+          
+          {/* Indicador silencioso */}
+          {!isLoaded && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+              <Search className="h-4 w-4" />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

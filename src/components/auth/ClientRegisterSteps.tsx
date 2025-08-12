@@ -10,6 +10,8 @@ import RegistrationSuccess from './RegistrationSuccess';
 import { AddressAutocompleteInput } from '../ui/address-autocomplete';
 import { supabase } from '@/integrations/supabase/client';
 import EmailVerificationNotice from './EmailVerificationNotice';
+import { getAddressFromCoordinates } from '@/lib/google-maps';
+import { useToast } from '@/hooks/use-toast';
 
 interface Step1Data {
   email: string;
@@ -20,6 +22,7 @@ interface Step1Data {
 const ClientRegisterSteps = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [step1Data, setStep1Data] = useState<Step1Data>({
@@ -92,9 +95,71 @@ const ClientRegisterSteps = () => {
     }, 1000);
   };
 
+  const handleGetCurrentLocation = async () => {
+    setGeoLoading(true);
+    try {
+      if (!navigator.geolocation) {
+        toast({
+          title: "Error",
+          description: "La geolocalización no está soportada en este navegador.",
+          variant: "destructive",
+        });
+        return;
+      }
 
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        });
+      });
 
-
+      const { latitude, longitude } = position.coords;
+      
+      // Obtener la dirección a partir de las coordenadas
+      const address = await getAddressFromCoordinates(latitude, longitude);
+      
+      if (address) {
+        setAddress(address);
+        toast({
+          title: "Ubicación obtenida",
+          description: "Tu ubicación actual se ha establecido correctamente.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la dirección a partir de tu ubicación.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error obteniendo ubicación actual:', error);
+      let errorMessage = 'No se pudo obtener tu ubicación.';
+      
+      if (error.code) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permiso denegado para acceder a tu ubicación.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Información de ubicación no disponible.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Tiempo de espera agotado al obtener tu ubicación.';
+            break;
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setGeoLoading(false);
+    }
+  };
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,6 +353,9 @@ const ClientRegisterSteps = () => {
               value={address}
               onChange={setAddress}
               placeholder="Ej: Av. Providencia 1234, Santiago"
+              showLocationButton={true}
+              onGetCurrentLocation={handleGetCurrentLocation}
+              geoLoading={geoLoading}
             />
             {errors.address && (
               <p className="text-sm text-destructive">{errors.address}</p>
