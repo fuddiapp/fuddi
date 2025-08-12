@@ -40,10 +40,17 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
   const ensureAutocompleteZIndex = () => {
     setTimeout(() => {
       const pacContainer = document.querySelector('.pac-container');
-      if (pacContainer) {
-        (pacContainer as HTMLElement).style.zIndex = '99999';
-        (pacContainer as HTMLElement).style.pointerEvents = 'auto';
-        (pacContainer as HTMLElement).style.position = 'fixed';
+      if (pacContainer && inputRef.current) {
+        const container = pacContainer as HTMLElement;
+        const inputRect = inputRef.current.getBoundingClientRect();
+        
+        // Posicionar el contenedor justo debajo del input
+        container.style.position = 'absolute';
+        container.style.top = `${inputRect.bottom + window.scrollY}px`;
+        container.style.left = `${inputRect.left + window.scrollX}px`;
+        container.style.width = `${inputRect.width}px`;
+        container.style.zIndex = '99999';
+        container.style.pointerEvents = 'auto';
         
         // Prevenir que los eventos se propaguen
         const preventPropagation = (e: Event) => {
@@ -52,18 +59,18 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
         };
         
         // Remover listeners anteriores
-        pacContainer.removeEventListener('click', preventPropagation, true);
-        pacContainer.removeEventListener('mousedown', preventPropagation, true);
-        pacContainer.removeEventListener('mouseup', preventPropagation, true);
-        pacContainer.removeEventListener('pointerdown', preventPropagation, true);
-        pacContainer.removeEventListener('pointerup', preventPropagation, true);
+        container.removeEventListener('click', preventPropagation, true);
+        container.removeEventListener('mousedown', preventPropagation, true);
+        container.removeEventListener('mouseup', preventPropagation, true);
+        container.removeEventListener('pointerdown', preventPropagation, true);
+        container.removeEventListener('pointerup', preventPropagation, true);
         
         // Agregar listeners nuevos
-        pacContainer.addEventListener('click', preventPropagation, true);
-        pacContainer.addEventListener('mousedown', preventPropagation, true);
-        pacContainer.addEventListener('mouseup', preventPropagation, true);
-        pacContainer.addEventListener('pointerdown', preventPropagation, true);
-        pacContainer.addEventListener('pointerup', preventPropagation, true);
+        container.addEventListener('click', preventPropagation, true);
+        container.addEventListener('mousedown', preventPropagation, true);
+        container.addEventListener('mouseup', preventPropagation, true);
+        container.addEventListener('pointerdown', preventPropagation, true);
+        container.addEventListener('pointerup', preventPropagation, true);
       }
     }, 100);
   };
@@ -151,18 +158,34 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
     return () => clearTimeout(timer);
   }, [isLoaded]);
 
+  // Monitorear cuando aparece el autocompletado y reposicionarlo
+  useEffect(() => {
+    const checkAndReposition = () => {
+      const pacContainer = document.querySelector('.pac-container');
+      if (pacContainer && pacContainer.children.length > 0) {
+        ensureAutocompleteZIndex();
+      }
+    };
+
+    const interval = setInterval(checkAndReposition, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   // Aplicar estilos CSS para el autocompletado
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
       .pac-container {
         z-index: 99999 !important;
-        position: fixed !important;
+        position: absolute !important;
         border-radius: 8px !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
         pointer-events: auto !important;
         background-color: white !important;
         border: 1px solid #e5e7eb !important;
+        margin-top: 2px !important;
+        max-height: 200px !important;
+        overflow-y: auto !important;
       }
       .pac-item {
         padding: 8px 12px !important;
@@ -200,6 +223,13 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     onChange(val);
+    
+    // Reposicionar el autocompletado cuando el usuario escribe
+    if (val.length > 0) {
+      setTimeout(() => {
+        ensureAutocompleteZIndex();
+      }, 50);
+    }
   };
 
   const handleInputFocus = () => {
