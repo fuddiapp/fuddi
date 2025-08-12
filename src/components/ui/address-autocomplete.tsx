@@ -36,113 +36,37 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
   const autocompleteRef = useRef<any>(null);
   const { isLoaded } = useGoogleMaps();
 
-  useEffect(() => {
-    if (isLoaded && inputRef.current) {
-      initializeAutocomplete();
-    }
-  }, [isLoaded]);
-
-  // Reinicializar cuando el componente se monta
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isLoaded && inputRef.current && !autocompleteRef.current) {
-        initializeAutocomplete();
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [isLoaded]);
-
-  // Monitorear cuando el autocompletado se abre y reposicionarlo
-  useEffect(() => {
-    const repositionAutocomplete = () => {
+  // Función para asegurar que el contenedor del autocompletado tenga el z-index correcto
+  const ensureAutocompleteZIndex = () => {
+    setTimeout(() => {
       const pacContainer = document.querySelector('.pac-container');
-      if (pacContainer && inputRef.current) {
-        const container = pacContainer as HTMLElement;
-        container.style.position = 'absolute';
-        container.style.top = '100%';
-        container.style.left = '0';
-        container.style.right = '0';
-        container.style.marginTop = '2px';
-        container.style.zIndex = '99999';
+      if (pacContainer) {
+        (pacContainer as HTMLElement).style.zIndex = '99999';
+        (pacContainer as HTMLElement).style.pointerEvents = 'auto';
+        (pacContainer as HTMLElement).style.position = 'fixed';
+        
+        // Prevenir que los eventos se propaguen
+        const preventPropagation = (e: Event) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        };
+        
+        // Remover listeners anteriores
+        pacContainer.removeEventListener('click', preventPropagation, true);
+        pacContainer.removeEventListener('mousedown', preventPropagation, true);
+        pacContainer.removeEventListener('mouseup', preventPropagation, true);
+        pacContainer.removeEventListener('pointerdown', preventPropagation, true);
+        pacContainer.removeEventListener('pointerup', preventPropagation, true);
+        
+        // Agregar listeners nuevos
+        pacContainer.addEventListener('click', preventPropagation, true);
+        pacContainer.addEventListener('mousedown', preventPropagation, true);
+        pacContainer.addEventListener('mouseup', preventPropagation, true);
+        pacContainer.addEventListener('pointerdown', preventPropagation, true);
+        pacContainer.addEventListener('pointerup', preventPropagation, true);
       }
-    };
-
-    // Observar cambios en el DOM para detectar cuando aparece el autocompletado
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const element = node as Element;
-              if (element.classList && element.classList.contains('pac-container')) {
-                setTimeout(repositionAutocomplete, 10);
-              }
-            }
-          });
-        }
-      });
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Aplicar estilos CSS para el autocompletado
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .pac-container {
-        z-index: 99999 !important;
-        position: absolute !important;
-        top: 100% !important;
-        left: 0 !important;
-        right: 0 !important;
-        border-radius: 8px !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-        pointer-events: auto !important;
-        background: white !important;
-        border: 1px solid #e5e7eb !important;
-        margin-top: 2px !important;
-        max-height: 200px !important;
-        overflow-y: auto !important;
-      }
-      .pac-item {
-        padding: 8px 12px !important;
-        cursor: pointer !important;
-        border-bottom: 1px solid #f3f4f6 !important;
-        pointer-events: auto !important;
-        font-size: 14px !important;
-        line-height: 1.4 !important;
-      }
-      .pac-item:hover {
-        background-color: #f9fafb !important;
-      }
-      .pac-item-selected {
-        background-color: #e5e7eb !important;
-      }
-      .pac-item:last-child {
-        border-bottom: none !important;
-      }
-      .pac-item-query {
-        font-weight: 500 !important;
-        color: #1f2937 !important;
-      }
-      .pac-matched {
-        font-weight: 600 !important;
-        color: #fuddi-purple !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+    }, 100);
+  };
 
   const initializeAutocomplete = () => {
     if (!inputRef.current) {
@@ -201,31 +125,77 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
         }
       });
 
-      // Asegurar que el contenedor del autocompletado tenga el z-index correcto y esté posicionado correctamente
-      setTimeout(() => {
-        const pacContainer = document.querySelector('.pac-container');
-        if (pacContainer) {
-          const container = pacContainer as HTMLElement;
-          container.style.zIndex = '99999';
-          container.style.pointerEvents = 'auto';
-          
-          // Reposicionar el contenedor para que aparezca justo debajo del input
-          if (inputRef.current) {
-            const inputRect = inputRef.current.getBoundingClientRect();
-            container.style.position = 'absolute';
-            container.style.top = '100%';
-            container.style.left = '0';
-            container.style.right = '0';
-            container.style.marginTop = '2px';
-          }
-        }
-      }, 100);
+      // Asegurar z-index correcto y prevenir propagación de eventos
+      ensureAutocompleteZIndex();
 
       // Autocomplete inicializado correctamente
     } catch (error) {
       // Silenciar errores
     }
   };
+
+  useEffect(() => {
+    if (isLoaded && inputRef.current) {
+      initializeAutocomplete();
+    }
+  }, [isLoaded]);
+
+  // Reinicializar cuando el componente se monta
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoaded && inputRef.current && !autocompleteRef.current) {
+        initializeAutocomplete();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
+
+  // Aplicar estilos CSS para el autocompletado
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .pac-container {
+        z-index: 99999 !important;
+        position: fixed !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        pointer-events: auto !important;
+        background-color: white !important;
+        border: 1px solid #e5e7eb !important;
+      }
+      .pac-item {
+        padding: 8px 12px !important;
+        cursor: pointer !important;
+        border-bottom: 1px solid #f3f4f6 !important;
+        pointer-events: auto !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+      }
+      .pac-item:hover {
+        background-color: #f9fafb !important;
+      }
+      .pac-item-selected {
+        background-color: #e5e7eb !important;
+      }
+      .pac-item:last-child {
+        border-bottom: none !important;
+      }
+      .pac-item-query {
+        font-weight: 500 !important;
+        color: #1f2937 !important;
+      }
+      .pac-matched {
+        font-weight: 700 !important;
+        color: #7c3aed !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -238,24 +208,8 @@ export const AddressAutocompleteInput: React.FC<AddressAutocompleteProps> = ({
       initializeAutocomplete();
     }
     
-    // Asegurar que el contenedor del autocompletado tenga el z-index correcto y esté posicionado correctamente
-    setTimeout(() => {
-      const pacContainer = document.querySelector('.pac-container');
-      if (pacContainer) {
-        const container = pacContainer as HTMLElement;
-        container.style.zIndex = '99999';
-        container.style.pointerEvents = 'auto';
-        
-        // Reposicionar el contenedor para que aparezca justo debajo del input
-        if (inputRef.current) {
-          container.style.position = 'absolute';
-          container.style.top = '100%';
-          container.style.left = '0';
-          container.style.right = '0';
-          container.style.marginTop = '2px';
-        }
-      }
-    }, 100);
+    // Asegurar z-index correcto y prevenir propagación de eventos
+    ensureAutocompleteZIndex();
   };
 
   const handleGetCurrentLocation = async () => {
