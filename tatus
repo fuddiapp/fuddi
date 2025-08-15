@@ -8,3 +8,8 @@
 [33m014e83c[m Disable AuthProvider again to avoid hanging Supabase queries
 [33mcf03128[m Restore clients table query with 1-second timeout
 [33m71af1e8[m Temporarily skip clients table query to avoid hanging issue
+[33m4e2b148[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: posicionar autocompletado justo debajo del campo de entrada
+[33m6e60df3[m fix: usar la misma lógica de autocompletado que funciona perfectamente en el header
+[33m2c004b3[m fix: reposicionar autocompletado de Google Maps para mejor UX
+[33mcc0bf7f[m feat: agregar botón de ubicación actual al registro de cliente paso 2
+[33m621a6f7[m Fix: Simplificar AuthContext y mejorar carga de datos del usuario - Evitar carga infinita y cargar dirección desde UserLocationContext

@@ -88,7 +88,6 @@ const PromotionCarousel: React.FC<PromotionCarouselProps> = ({
                 business_id: '', // No tenemos business_id en ClientPromotion
                 business_name: promotion.businessName,
                 distance: promotion.distance,
-                canjes: promotion.canjes,
                 categories: promotion.tags
               }}
               onClick={() => onPromotionClick?.(promotion)}

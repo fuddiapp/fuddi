@@ -16,8 +16,8 @@ export const usePromotionsLimit = () => {
   const { toast } = useToast();
   const [limit, setLimit] = useState<PromotionsLimit>({
     current: 0,
-    max: 25,
-    remaining: 25,
+    max: 10,
+    remaining: 10,
     isAtLimit: false,
     isOverLimit: false,
   });
@@ -44,7 +44,7 @@ export const usePromotionsLimit = () => {
         return;
       }
 
-      const maxPromotions = businessData?.max_promotions || 25;
+      const maxPromotions = businessData?.max_promotions || 10;
 
       // Contar solo promociones activas del negocio
       const now = new Date().toISOString().split('T')[0];
@@ -97,7 +97,7 @@ export const usePromotionsLimit = () => {
         return false;
       }
 
-      const maxPromotions = businessData?.max_promotions || 25;
+      const maxPromotions = businessData?.max_promotions || 10;
 
       // Contar solo promociones activas
       const now = new Date().toISOString().split('T')[0];

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, Store, Navigation, Gift } from 'lucide-react';
+import { MapPin, Clock, Store, Navigation } from 'lucide-react';
 import { formatPriceCLP } from '@/lib/formatters';
 import type { ClientPromotion } from '@/contexts/ClientPromotionsContext';
 
@@ -119,11 +119,7 @@ const ClientPromotionCard = ({
           </h3>
         </div>
         
-        {/* Canjes counter */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Gift className="h-4 w-4 text-fuddi-purple" />
-          <span className="font-medium">{redemptions} canjes</span>
-        </div>
+
         
         {/* Description */}
         <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">

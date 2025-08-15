@@ -178,7 +178,6 @@ const ClientHomePage: React.FC = () => {
         distance: distance,
         image: promo.image_url || '/placeholder.svg',
         category: promo.category,
-        canjes: promo.redemptions || 0,
         rating: 4.5, // TODO: Implementar sistema de ratings
         tags: promo.categories || [promo.category]
       };
@@ -586,7 +585,6 @@ const ClientHomePage: React.FC = () => {
                 distance: promo.distance,
                 image: promo.image,
                 category: promo.category,
-                canjes: promo.canjes,
                 rating: promo.rating,
                 tags: promo.tags
               }))}
@@ -611,7 +609,6 @@ const ClientHomePage: React.FC = () => {
                   business_id: '', // No tenemos business_id en ClientPromotion
                   business_name: promotion.businessName,
                   distance: promotion.distance,
-                  canjes: promotion.canjes,
                   categories: promotion.tags
                 }}
                 onClick={() => handlePromotionClick(promotion)}
@@ -639,7 +636,6 @@ const ClientHomePage: React.FC = () => {
                     distance: promo.distance,
                     image: promo.image,
                     category: promo.category,
-                    canjes: promo.canjes,
                     rating: promo.rating,
                     tags: promo.tags
                   }))}

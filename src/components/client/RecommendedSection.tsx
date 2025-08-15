@@ -55,7 +55,6 @@ const RecommendedSection: React.FC<RecommendedSectionProps> = ({
   const getRecommendationIcon = (promotion: ClientPromotion) => {
     if (promotion.rating >= 4.8) return <Sparkles className="h-4 w-4 text-yellow-500" />;
     if (promotion.distance <= 0.5) return <MapPin className="h-4 w-4 text-green-500" />;
-    if (promotion.canjes > 1000) return <TrendingUp className="h-4 w-4 text-red-500" />;
     return <Clock className="h-4 w-4 text-blue-500" />;
   };
 
@@ -106,7 +105,6 @@ const RecommendedSection: React.FC<RecommendedSectionProps> = ({
                       business_id: '', // No tenemos business_id en ClientPromotion
                       business_name: promotion.businessName,
                       distance: promotion.distance,
-                      canjes: promotion.canjes,
                       categories: promotion.tags
                     }}
                     onClick={() => onPromotionClick(promotion)}

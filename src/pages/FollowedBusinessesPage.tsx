@@ -85,7 +85,6 @@ interface PromotionCardData {
   distance: number;
   image: string;
   category: string;
-  canjes: number;
   rating: number;
   tags: string[];
 }
@@ -238,7 +237,6 @@ const FollowedBusinessesPage: React.FC = () => {
         distance: distance,
         image: promo.image_url || '/placeholder.svg',
         category: promo.category,
-        canjes: promo.redemptions,
         rating: 4.5, // TODO: Implementar sistema de ratings
         tags: promo.categories || [promo.category]
       };
@@ -462,7 +460,6 @@ const FollowedBusinessesPage: React.FC = () => {
                     business_id: '', // No tenemos business_id en PromotionCardData
                     business_name: promotion.businessName,
                     distance: promotion.distance,
-                    canjes: promotion.canjes,
                     categories: promotion.tags
                   }}
                   onClick={() => handlePromotionClick(promotion)}
@@ -484,7 +481,6 @@ const FollowedBusinessesPage: React.FC = () => {
                         business_id: '', // No tenemos business_id en PromotionCardData
                         business_name: promotion.businessName,
                         distance: promotion.distance,
-                        canjes: promotion.canjes,
                         categories: promotion.tags
                       }}
                       onClick={() => handlePromotionClick(promotion)}

@@ -10,7 +10,6 @@ export interface ClientPromotion {
   distance: number; // en km
   image: string;
   category: string;
-  canjes: number; // número de canjes/redenciones
   rating: number;
   tags: string[];
 }

@@ -731,7 +731,6 @@ const BusinessDetailPage: React.FC = () => {
                       business_id: business.id,
                       business_name: business.business_name,
                       distance: 0.5,
-                      canjes: promotion.redemptions,
                       categories: promotion.categories || [promotion.category]
                     }}
                     onClick={() => navigate(`/promotion/${promotion.id}`)}
@@ -914,7 +913,6 @@ const BusinessDetailPage: React.FC = () => {
                       business_id: business.id,
                       business_name: business.business_name,
                       distance: 0.5,
-                      canjes: promotion.redemptions,
                       categories: promotion.categories || [promotion.category]
                     }}
                     onClick={() => navigate(`/promotion/${promotion.id}`)}
