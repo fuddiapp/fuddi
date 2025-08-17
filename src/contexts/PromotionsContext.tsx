@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getPromotions as getPromotionsFromDB, createPromotion as createPromotionInDB, updatePromotion as updatePromotionInDB, deletePromotion as deletePromotionFromDB } from '@/integrations/supabase/promotions';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,12 +43,18 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
   const [promotions, setPromotions] = useState<AppPromotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState(false);
+  
+  // Usar useRef para evitar re-renderizados innecesarios
+  const loadingRef = useRef(false);
+  const userRef = useRef(user?.id);
 
   const refreshPromotions = useCallback(async () => {
-    if (!user?.id) {
-      return; // No cargar si no hay usuario
+    if (!user?.id || loadingRef.current) {
+      return; // No cargar si no hay usuario o ya está cargando
     }
+    
     try {
+      loadingRef.current = true;
       setLoading(true);
       setDatabaseError(false); // Reset error state
       
@@ -105,20 +111,23 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
       
       setPromotions([]);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
-  // Cargar promociones cuando cambie el usuario
-  useEffect(() => {
-    if (user?.id) {
+  // Cargar promociones cuando cambie el usuario - usar useStableEffect para evitar re-renderizados
+  useStableEffect(() => {
+    if (user?.id && userRef.current !== user.id) {
+      userRef.current = user.id;
       refreshPromotions();
-    } else {
+    } else if (!user?.id) {
       // Limpiar promociones si no hay usuario
       setPromotions([]);
       setLoading(false);
+      userRef.current = undefined;
     }
-  }, [user?.id, refreshPromotions]); // Incluir refreshPromotions para que se actualice cuando cambie el usuario
+  }, [user?.id, refreshPromotions]);
 
   const addPromotion = useCallback(async (promotionData: Omit<AppPromotion, 'id' | 'views' | 'redemptions' | 'createdAt'>) => {
     try {
@@ -172,7 +181,7 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
       console.error('Error adding promotion:', error);
       throw error;
     }
-  }, [refreshPromotions, user]);
+  }, [refreshPromotions, user?.id]);
 
   const updatePromotion = useCallback(async (id: string, updates: Partial<AppPromotion>) => {
     try {
@@ -223,7 +232,7 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
       console.error('Error updating promotion:', error);
       throw error;
     }
-  }, [user]);
+  }, [user?.id]);
 
   const deletePromotion = useCallback(async (id: string) => {
     try {
@@ -236,7 +245,7 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
       console.error('Error deleting promotion:', error);
       throw error;
     }
-  }, [user]);
+  }, [user?.id]);
 
   const getActivePromotions = useMemo((): AppPromotion[] => {
     const now = new Date();
@@ -270,19 +279,32 @@ function PromotionsProvider({ children }: { children: ReactNode }) {
     return promotions;
   }, [promotions]);
 
+  // Memoizar el valor del contexto para evitar re-renderizados innecesarios
+  const contextValue = useMemo(() => ({
+    promotions,
+    addPromotion,
+    updatePromotion,
+    deletePromotion,
+    getActivePromotions,
+    getAllPromotions,
+    loading,
+    refreshPromotions,
+    databaseError,
+    setDatabaseError
+  }), [
+    promotions,
+    addPromotion,
+    updatePromotion,
+    deletePromotion,
+    getActivePromotions,
+    getAllPromotions,
+    loading,
+    refreshPromotions,
+    databaseError
+  ]);
+
   return (
-    <PromotionsContext.Provider value={{
-      promotions,
-      addPromotion,
-      updatePromotion,
-      deletePromotion,
-      getActivePromotions,
-      getAllPromotions,
-      loading,
-      refreshPromotions,
-      databaseError,
-      setDatabaseError
-    }}>
+    <PromotionsContext.Provider value={contextValue}>
       {children}
     </PromotionsContext.Provider>
   );
@@ -296,7 +318,8 @@ function usePromotions() {
     throw new Error('usePromotions must be used within a PromotionsProvider');
   }
   
-  console.log('usePromotions - Retornando contexto:', context);
+  // Reducir los logs para evitar spam en consola
+  // console.log('usePromotions - Retornando contexto:', context);
   return context;
 }
 

@@ -30,6 +30,7 @@ import TrendsCard from '@/components/dashboard/TrendsCard';
 import { getDashboardStats, DashboardStats } from '@/integrations/supabase/dashboard-stats';
 import { getCurrentDate } from '@/lib/utils';
 import { useAutoRefreshMenus } from '@/hooks/use-auto-refresh-menus';
+import { useDashboardState } from '@/hooks/use-dashboard-state';
 
 
 const DashboardPage = () => {
@@ -37,7 +38,22 @@ const DashboardPage = () => {
   const { promotions, loading: loadingPromotions, deletePromotion } = usePromotions();
   const navigate = useNavigate();
   
-  // Logs de diagnóstico detallados
+  // Usar el hook personalizado para manejar el estado del dashboard
+  const {
+    business,
+    loadingBusiness,
+    businessError,
+    menusDia,
+    loadingMenus,
+    products,
+    loadingProducts,
+    menuStats,
+    dashboardStats,
+    loadingStats,
+    fetchMenus
+  } = useDashboardState();
+
+  // Logs de diagnóstico detallados - solo una vez al montar
   React.useEffect(() => {
     console.log('🔍 DashboardPage: Componente montado');
     console.log('👤 DashboardPage: Usuario:', user);
@@ -48,9 +64,9 @@ const DashboardPage = () => {
     console.log('  - VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
     console.log('  - NODE_ENV:', import.meta.env.NODE_ENV);
     console.log('  - MODE:', import.meta.env.MODE);
-  }, [user, promotions, loadingPromotions]);
+  }, []); // Solo se ejecuta una vez al montar
 
-  // Verificar variables de entorno
+  // Verificar variables de entorno - solo una vez
   React.useEffect(() => {
     console.log('🔍 Dashboard: Verificando variables de entorno...');
     console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
@@ -58,134 +74,7 @@ const DashboardPage = () => {
     console.log('VITE_GOOGLE_MAPS_API_KEY:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? '✅ Configurada' : '❌ No configurada');
     console.log('NODE_ENV:', import.meta.env.NODE_ENV);
     console.log('MODE:', import.meta.env.MODE);
-  }, []);
-
-  const [business, setBusiness] = React.useState<any>(null);
-  const [loadingBusiness, setLoadingBusiness] = React.useState(true);
-  const [businessError, setBusinessError] = React.useState<string | null>(null);
-  const [menusDia, setMenusDia] = React.useState<any[]>([]);
-  const [loadingMenus, setLoadingMenus] = React.useState(true);
-  const [products, setProducts] = React.useState([]);
-  const [loadingProducts, setLoadingProducts] = React.useState(true);
-  const [menuStats, setMenuStats] = React.useState<{
-    currentMenus: number;
-    totalMenus: number;
-    expiredMenus: number;
-  }>({ currentMenus: 0, totalMenus: 0, expiredMenus: 0 });
-  // const [cleaningMenus, setCleaningMenus] = React.useState(false); // Eliminado - ya no se necesita
-  const [dashboardStats, setDashboardStats] = React.useState<DashboardStats | null>(null);
-  const [loadingStats, setLoadingStats] = React.useState(true);
-
-  // Función para obtener el día actual
-  const getCurrentDay = () => {
-    const today = new Date();
-    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    return dayNames[today.getDay()];
-  };
-
-  // Función para formatear precio
-  const formatPrice = (price?: number) => {
-    if (!price) return null;
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  // Cargar datos del negocio
-  React.useEffect(() => {
-    const fetchBusiness = async () => {
-      console.log('🔄 Dashboard: Iniciando carga de datos del negocio...');
-      setLoadingBusiness(true);
-      setBusinessError(null);
-      
-      if (!user?.id) {
-        console.log('❌ Dashboard: No hay usuario autenticado');
-        setLoadingBusiness(false);
-        return;
-      }
-      
-      try {
-        // Primero, probar conectividad básica con Supabase
-        console.log('🔍 Dashboard: Probando conectividad con Supabase...');
-        const { data: testData, error: testError } = await supabase
-          .from('businesses')
-          .select('count')
-          .limit(1);
-        
-        if (testError) {
-          console.error('❌ Dashboard: Error de conectividad con Supabase:', testError);
-          setBusinessError(`Error de conexión con la base de datos: ${testError.message}`);
-          setLoadingBusiness(false);
-          return;
-        }
-        
-        console.log('✅ Dashboard: Conectividad con Supabase OK');
-        
-        console.log('📊 Dashboard: Consultando negocio para usuario:', user.id);
-        const { data, error } = await supabase
-          .from('businesses')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('❌ Dashboard: Error cargando negocio:', error);
-          setBusinessError(`No se pudo cargar la información del negocio: ${error.message}`);
-        } else {
-          console.log('✅ Dashboard: Negocio cargado exitosamente:', data);
-          setBusiness(data);
-        }
-      } catch (err) {
-        console.error('❌ Dashboard: Error inesperado:', err);
-        setBusinessError('Error inesperado al cargar la información del negocio');
-      }
-      
-      setLoadingBusiness(false);
-    };
-    
-    fetchBusiness();
-  }, [user]);
-
-  // Cargar menús del día del negocio (solo de la fecha actual)
-  const fetchMenus = React.useCallback(async () => {
-    console.log('🔄 Dashboard: Iniciando carga de menús...');
-    setLoadingMenus(true);
-    if (!user?.id) {
-      console.log('❌ Dashboard: No hay usuario para cargar menús');
-      setLoadingMenus(false);
-      return;
-    }
-    
-    try {
-      console.log('📊 Dashboard: Consultando menús para usuario:', user.id);
-      // Usar el servicio actualizado que filtra por fecha actual
-      const menus = await menusDiaService.getMenusDia(user.id);
-      console.log('✅ Dashboard: Menús cargados:', menus);
-      setMenusDia(menus);
-      
-      // Obtener estadísticas de menús usando getCleanupStatus
-      console.log('📊 Dashboard: Obteniendo estadísticas de menús...');
-      const cleanupStatus = await menusDiaService.getCleanupStatus();
-      console.log('✅ Dashboard: Estadísticas de menús:', cleanupStatus);
-      setMenuStats({
-        currentMenus: cleanupStatus.menus.current,
-        totalMenus: cleanupStatus.menus.total,
-        expiredMenus: cleanupStatus.menus.expired
-      });
-    } catch (error) {
-      console.error('❌ Dashboard: Error cargando menús:', error);
-      setMenusDia([]);
-    } finally {
-      setLoadingMenus(false);
-    }
-  }, [user?.id]);
-
-  React.useEffect(() => {
-    fetchMenus();
-  }, [fetchMenus]);
+  }, []); // Solo se ejecuta una vez
 
   // Usar el hook para actualización automática cuando cambie la fecha
   const { forceRefresh } = useAutoRefreshMenus({
@@ -193,61 +82,23 @@ const DashboardPage = () => {
     dependencies: [fetchMenus]
   });
 
-  // Función para limpiar menús expirados manualmente - ELIMINADA
+  // Función para obtener el día actual
+  const getCurrentDay = React.useCallback(() => {
+    const today = new Date();
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return dayNames[today.getDay()];
+  }, []);
 
-  // Cargar productos del negocio
-  React.useEffect(() => {
-    const fetchProducts = async () => {
-      console.log('🔄 Dashboard: Iniciando carga de productos...');
-      setLoadingProducts(true);
-      if (!user?.id) {
-        console.log('❌ Dashboard: No hay usuario para cargar productos');
-        setLoadingProducts(false);
-        return;
-      }
-      try {
-        console.log('📊 Dashboard: Consultando productos para usuario:', user.id);
-        const productos = await getProducts(user.id);
-        console.log('✅ Dashboard: Productos cargados:', productos);
-        // Normalizar campo destacado
-        const mapped = productos.map(p => ({ ...p, isFeatured: p.is_featured || false }));
-        setProducts(mapped);
-      } catch (err) {
-        console.error('❌ Dashboard: Error cargando productos:', err);
-        setProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-    fetchProducts();
-  }, [user?.id]);
-
-  // Cargar estadísticas del dashboard
-  React.useEffect(() => {
-    const fetchDashboardStats = async () => {
-      console.log('🔄 Dashboard: Iniciando carga de estadísticas...');
-      setLoadingStats(true);
-      if (!user?.id) {
-        console.log('❌ Dashboard: No hay usuario para cargar estadísticas');
-        setLoadingStats(false);
-        return;
-      }
-      
-      try {
-        console.log('📊 Dashboard: Consultando estadísticas para usuario:', user.id);
-        const stats = await getDashboardStats(user.id);
-        console.log('✅ Dashboard: Estadísticas cargadas:', stats);
-        setDashboardStats(stats);
-      } catch (error) {
-        console.error('❌ Dashboard: Error cargando estadísticas del dashboard:', error);
-        toast.error('Error al cargar estadísticas del dashboard');
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-    
-    fetchDashboardStats();
-  }, [user?.id, toast]);
+  // Función para formatear precio
+  const formatPrice = React.useCallback((price?: number) => {
+    if (!price) return null;
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  }, []);
 
   // Calcular métricas clave usando datos reales del dashboard
   const totalPromotions = dashboardStats?.totalPromotions || 0;
@@ -256,23 +107,30 @@ const DashboardPage = () => {
   const totalRevenue = dashboardStats?.totalRevenue || 0;
 
   // Datos para el gráfico de rendimiento (canjes por fecha)
-  const performanceChartData = dashboardStats?.redemptionsByDate.map(item => ({
-    date: new Date(item.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' }),
-    views: 0, // Por ahora no tenemos datos de vistas
-    redemptions: item.count
-  })) || [];
+  const performanceChartData = React.useMemo(() => 
+    dashboardStats?.redemptionsByDate.map(item => ({
+      date: new Date(item.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' }),
+      views: 0, // Por ahora no tenemos datos de vistas
+      redemptions: item.count
+    })) || [], [dashboardStats?.redemptionsByDate]
+  );
 
   // Datos para el gráfico de torta: top categorías por canjes
-  const pieData = dashboardStats?.topCategories.map(cat => ({
-    name: cat.category,
-    value: cat.redemptions
-  })) || [];
+  const pieData = React.useMemo(() => 
+    dashboardStats?.topCategories.map(cat => ({
+      name: cat.category,
+      value: cat.redemptions
+    })) || [], [dashboardStats?.topCategories]
+  );
   
   const PIE_COLORS = ['#4F01A1', '#6a1cc1', '#8884d8', '#82ca9d', '#ffc658', '#e0e0e0'];
 
   // Calcular promociones con mejor rendimiento (más canjes)
-  const bestPromotions = [...promotions].sort((a, b) => b.redemptions - a.redemptions).slice(0, 6);
+  const bestPromotions = React.useMemo(() => 
+    [...promotions].sort((a, b) => b.redemptions - a.redemptions).slice(0, 6), [promotions]
+  );
 
+  // Estados de carga
   if (loadingBusiness) {
     return <div className="text-center py-8">Cargando información del negocio...</div>;
   }
@@ -349,62 +207,18 @@ const DashboardPage = () => {
 
           {/* Promociones con mejor rendimiento */}
           {bestPromotions.length > 0 && (
-            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
-              <h2 className="font-bold text-lg mb-2 text-fuddi-purple">Promociones con mejor rendimiento</h2>
-              <Carousel className="relative">
-                <CarouselPrevious />
-                <CarouselContent>
-                  {bestPromotions.map(promo => (
-                    <CarouselItem key={promo.id} className="basis-64 max-w-xs">
-                      <PromotionCard
-                        {...promo}
-                        onEdit={() => navigate(`/promotions/edit/${promo.id}`)}
-                        onDelete={() => deletePromotion(promo.id)}
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselNext />
-              </Carousel>
-            </div>
-          )}
-
-          {/* Reservas de menús */}
-          {business && (
-            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
-              <ReservationsCard businessId={business.id} />
-            </div>
-          )}
-                    {/* Gestión de Menús del Día */}
-          <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-lg text-fuddi-purple">Menús del Día</h2>
-              <Button 
-                onClick={() => navigate('/daily-menu')} 
-                className="bg-fuddi-purple hover:bg-fuddi-purple-light"
-                size="sm"
-              >
-                <Utensils className="mr-2 h-4 w-4" />
-                Gestionar Menús
-              </Button>
-            </div>
-            
-            {/* Menús actuales */}
-            {menusDia.length > 0 ? (
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Menús de hoy ({getCurrentDay()}):</h3>
+            <PreventRerender name="best-promotions">
+              <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
+                <h2 className="font-bold text-lg mb-2 text-fuddi-purple">Promociones con mejor rendimiento</h2>
                 <Carousel className="relative">
                   <CarouselPrevious />
                   <CarouselContent>
-                    {menusDia.map(menu => (
-                      <CarouselItem key={menu.id} className="basis-64 max-w-xs">
-                        <MenuCard
-                          menu={{
-                            id: menu.id,
-                            name: menu.nombre_menu || 'Menú del día',
-                            description: menu.descripcion_menu || 'Sin descripción',
-                            price: menu.precio_menu
-                          }}
+                    {bestPromotions.map(promo => (
+                      <CarouselItem key={promo.id} className="basis-64 max-w-xs">
+                        <PromotionCard
+                          {...promo}
+                          onEdit={() => navigate(`/promotions/edit/${promo.id}`)}
+                          onDelete={() => deletePromotion(promo.id)}
                         />
                       </CarouselItem>
                     ))}
@@ -412,27 +226,79 @@ const DashboardPage = () => {
                   <CarouselNext />
                 </Carousel>
               </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <Utensils className="mx-auto h-12 w-12 mb-2 text-gray-300" />
-                <p>No hay menús del día para hoy</p>
+            </PreventRerender>
+          )}
+
+          {/* Reservas de menús */}
+          {business && (
+            <PreventRerender name="reservations">
+              <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
+                <ReservationsCard businessId={business.id} />
+              </div>
+            </PreventRerender>
+          )}
+                    {/* Gestión de Menús del Día */}
+          <PreventRerender name="menus-section">
+            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold text-lg text-fuddi-purple">Menús del Día</h2>
                 <Button 
                   onClick={() => navigate('/daily-menu')} 
-                  className="mt-2 bg-fuddi-purple hover:bg-fuddi-purple-light"
+                  className="bg-fuddi-purple hover:bg-fuddi-purple-light"
                   size="sm"
                 >
-                  Crear primer menú
+                  <Utensils className="mr-2 h-4 w-4" />
+                  Gestionar Menús
                 </Button>
               </div>
-            )}
-          </div>
+              
+              {/* Menús actuales */}
+              {menusDia.length > 0 ? (
+                <div>
+                  <h3 className="font-semibold text-gray-700 mb-2">Menús de hoy ({getCurrentDay()}):</h3>
+                  <Carousel className="relative">
+                    <CarouselPrevious />
+                    <CarouselContent>
+                      {menusDia.map(menu => (
+                        <CarouselItem key={menu.id} className="basis-64 max-w-xs">
+                          <MenuCard
+                            menu={{
+                              id: menu.id,
+                              name: menu.nombre_menu || 'Menú del día',
+                              description: menu.descripcion_menu || 'Sin descripción',
+                              price: menu.precio_menu
+                            }}
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselNext />
+                  </Carousel>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Utensils className="mx-auto h-12 w-12 mb-2 text-gray-300" />
+                  <p>No hay menús del día para hoy</p>
+                  <Button 
+                    onClick={() => navigate('/daily-menu')} 
+                    className="mt-2 bg-fuddi-purple hover:bg-fuddi-purple-light"
+                    size="sm"
+                  >
+                    Crear primer menú
+                  </Button>
+                </div>
+              )}
+            </div>
+          </PreventRerender>
 
 
           {/* Estadísticas de canjes */}
           {business && (
-            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
-              <RedemptionsStatsCard businessId={business.id} />
-            </div>
+            <PreventRerender name="redemptions-stats">
+              <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
+                <RedemptionsStatsCard businessId={business.id} />
+              </div>
+            </PreventRerender>
           )}
 
 
@@ -441,64 +307,70 @@ const DashboardPage = () => {
           
           {/* Tendencias */}
           {business && dashboardStats && (
-            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
-              <TrendsCard 
-                trends={[
-                  {
-                    label: 'Canjes',
-                    current: dashboardStats.trends.redemptions.current,
-                    previous: dashboardStats.trends.redemptions.previous,
-                    format: 'number'
-                  },
-                  {
-                    label: 'Ingresos',
-                    current: dashboardStats.trends.revenue.current,
-                    previous: dashboardStats.trends.revenue.previous,
-                    format: 'currency'
-                  },
-                  {
-                    label: 'Seguidores',
-                    current: dashboardStats.trends.followers.current,
-                    previous: dashboardStats.trends.followers.previous,
-                    format: 'number'
-                  }
-                ]}
-                loading={loadingStats}
-              />
-            </div>
+            <PreventRerender name="trends">
+              <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
+                <TrendsCard 
+                  trends={[
+                    {
+                      label: 'Canjes',
+                      current: dashboardStats.trends.redemptions.current,
+                      previous: dashboardStats.trends.redemptions.previous,
+                      format: 'number'
+                    },
+                    {
+                      label: 'Ingresos',
+                      current: dashboardStats.trends.revenue.current,
+                      previous: dashboardStats.trends.revenue.previous,
+                      format: 'currency'
+                    },
+                    {
+                      label: 'Seguidores',
+                      current: dashboardStats.trends.followers.current,
+                      previous: dashboardStats.trends.followers.previous,
+                      format: 'number'
+                    }
+                  ]}
+                  loading={loadingStats}
+                />
+              </div>
+            </PreventRerender>
           )}
 
           {/* Gráfico de rendimiento de canjes */}
           {performanceChartData.length > 0 && (
-            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
-              <PerformanceChart data={performanceChartData} title="Canjes por fecha" description="Evolución de canjes en los últimos 30 días" />
-            </div>
+            <PreventRerender name="performance-chart">
+              <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2">
+                <PerformanceChart data={performanceChartData} title="Canjes por fecha" description="Evolución de canjes en los últimos 30 días" />
+              </div>
+            </PreventRerender>
           )}
 
           {/* Gráfico de torta de categorías */}
           {pieData.length > 0 && (
-            <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2 flex flex-col items-center">
-              <h2 className="font-bold text-lg mb-2 text-fuddi-purple">Distribución de canjes por categoría</h2>
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#4F01A1"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} canjes`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <PreventRerender name="pie-chart">
+              <div className="w-full bg-white rounded-lg shadow-sm p-4 mt-2 flex flex-col items-center">
+                <h2 className="font-bold text-lg mb-2 text-fuddi-purple">Distribución de canjes por categoría</h2>
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#4F01A1"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} canjes`, name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </PreventRerender>
           )}
 
         </div>

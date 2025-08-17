@@ -6,6 +6,7 @@ import { PromotionsProvider } from '@/contexts/PromotionsContext';
 import { ClientPromotionsProvider } from '@/contexts/ClientPromotionsContext';
 import { UserLocationProvider } from '@/contexts/UserLocationContext';
 import { FollowedBusinessesProvider } from '@/contexts/FollowedBusinessesContext';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 // Páginas de autenticación
 import LoginPage from '@/pages/LoginPage';
@@ -128,7 +129,13 @@ function AppRoutes() {
         {/* Rutas de negocios */}
               <Route path="/dashboard" element={
                 <BusinessRoute>
-                  <DashboardPage />
+                  <ErrorBoundary
+                    onError={(error, errorInfo) => {
+                      console.error('Error en DashboardPage:', error, errorInfo);
+                    }}
+                  >
+                    <DashboardPage />
+                  </ErrorBoundary>
                 </BusinessRoute>
               } />
         <Route path="/analytics" element={
